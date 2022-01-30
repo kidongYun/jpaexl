@@ -1,7 +1,6 @@
 package com.kian.yun.jpaexl.domain;
 
 import lombok.extern.slf4j.Slf4j;
-import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.streaming.SXSSFWorkbook;
@@ -14,34 +13,21 @@ import java.util.Objects;
 public class PersistenceManager {
     private static PersistenceManager singleton;
     private final Workbook workbook;
-    private int rowCursor;
-    private int cellCursor;
 
-    private PersistenceManager(Workbook workbook, int rowCursor, int cellCursor) {
+    private PersistenceManager(Workbook workbook) {
         this.workbook = workbook;
-        this.rowCursor = rowCursor;
-        this.cellCursor = cellCursor;
     }
 
     public static PersistenceManager getInstance() {
-        return getInstance(new SXSSFWorkbook(), 4, 1);
+        return getInstance(new SXSSFWorkbook());
     }
 
-    private synchronized static PersistenceManager getInstance(Workbook workbook, int rowCursor, int cellCursor) {
+    private synchronized static PersistenceManager getInstance(Workbook workbook) {
         if(singleton == null) {
-            singleton = new PersistenceManager(workbook, rowCursor, cellCursor);
+            singleton = new PersistenceManager(workbook);
         }
 
         return singleton;
-    }
-
-    public void insert(String tableName, Tuple tuple) {
-        Sheet table = (isExist(tableName)) ? this.getTable(tableName) : this.createTable(tableName);
-        Row row = table.createRow(this.getRowCursor());
-
-        for(Data<?> data : tuple.getTuple()) {
-            row.createCell(this.getCellCursor()).setCellValue(String.valueOf(data.getValue()));
-        }
     }
 
     public void flush() {
@@ -53,38 +39,31 @@ public class PersistenceManager {
         }
     }
 
-    private Sheet getTable(String tableName) {
+    public Sheet getTable(String tableName) {
+        return (isExist(tableName)) ? this.getSheet(tableName) : this.createSheet(tableName);
+    }
+
+    public Sheet getSheet(String tableName) {
         return workbook.getSheet(tableName);
     }
 
-    private <T> Sheet createTable(String tableName, Schema<T>... schemas) {
-        Sheet table = workbook.createSheet(tableName);
-
-        Row row = table.createRow(this.getSchemaNameCursor());
-
-        for(Schema<T> schema : schemas) {
-        }
-
+    public Sheet createSheet(String tableName) {
         return workbook.createSheet(tableName);
     }
 
-    private int getRowCursor() {
-        return rowCursor++;
-    }
+//    private Sheet createTable(String tableName, List<Schema<?>> schemas) {
+//        Sheet table = workbook.createSheet(tableName);
+//
+//        Row row = table.createRow(Constants.SCHEMA_NAME_CURSOR);
+//
+//        for(Schema<?> schema : schemas) {
+//            row.createCell(this.getCellCursor()).setCellValue(schema.getName());
+//        }
+//
+//        return table;
+//    }
 
-    private int getCellCursor() {
-        return cellCursor++;
-    }
-
-    private int getSchemaNameCursor() {
-        return 2;
-    }
-
-    private int getSchemaTypeCursor() {
-        return 3;
-    }
-
-    private boolean isExist(String tableName) {
+    public boolean isExist(String tableName) {
         return !Objects.isNull(this.workbook.getSheet(tableName));
     }
 }

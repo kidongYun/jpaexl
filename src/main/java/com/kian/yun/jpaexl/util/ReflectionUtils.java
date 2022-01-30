@@ -17,4 +17,12 @@ public class ReflectionUtils {
 
         return target;
     }
+
+    public static int countFields(Field... fields) {
+        return fields.length;
+    }
+
+    public static String className(Object entity) {
+        return entity.getClass().getSimpleName();
+    }
 }

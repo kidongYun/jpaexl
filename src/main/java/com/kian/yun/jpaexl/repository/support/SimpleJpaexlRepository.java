@@ -1,9 +1,8 @@
 package com.kian.yun.jpaexl.repository.support;
 
-import com.kian.yun.jpaexl.domain.Data;
-import com.kian.yun.jpaexl.domain.PersistenceManager;
-import com.kian.yun.jpaexl.domain.Tuple;
+import com.kian.yun.jpaexl.domain.*;
 import com.kian.yun.jpaexl.repository.JpaexlRepository;
+import com.kian.yun.jpaexl.util.ReflectionUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -42,13 +41,11 @@ public class SimpleJpaexlRepository<T, ID> implements JpaexlRepository<T, ID> {
                 tuple.add(Data.of(field.getName(), field.get(entity)));
             }
 
-            persistenceManager.insert(entity.getClass().getSimpleName(), tuple);
+            Table.create(ReflectionUtils.className(entity)).insert(tuple);
 
         } catch (IllegalAccessException e) {
             e.printStackTrace();
         }
-
-        persistenceManager.flush();
 
         return null;
     }
