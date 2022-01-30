@@ -3,6 +3,7 @@ package com.kian.yun.jpaexl.domain;
 import com.kian.yun.jpaexl.code.Constants;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
+import org.yaml.snakeyaml.scanner.Constant;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -40,6 +41,9 @@ public class Table {
     private Sheet createTable(Sheet table, List<Schema<?>> schemas) {
         Row row = table.createRow(Constants.SCHEMA_NAME_CURSOR);
         createRow(row, schemas.stream().map(Schema::getName).collect(Collectors.toList()));
+
+        Row row2 = table.createRow(Constants.SCHEMA_TYPE_CURSOR);
+        createRow(row2, schemas.stream().map(s -> String.valueOf(s.getType())).collect(Collectors.toList()));
 
         return table;
     }
