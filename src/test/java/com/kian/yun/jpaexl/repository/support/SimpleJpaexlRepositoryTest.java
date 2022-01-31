@@ -18,12 +18,30 @@ class SimpleJpaexlRepositoryTest {
     }
 
     @Test
-    @DisplayName("save() 함수를 호출했을 때 정상의 경우 엑셀 형식의 파일을 추출해야 한다")
-    public void save_it_has_to_export_xlsx_file() {
+    @DisplayName("save() 함수를 한번 호출했을 때 정상의 경우 엑셀 형식의 파일로 추출되어야 한다")
+    public void save_called_one_time_then_it_has_to_export_xlsx_file() {
         // given
         Dummy dummy = Dummy.of(1L);
 
         // when
         jpaexlRepository.save(dummy);
+    }
+
+    @Test
+    @DisplayName("save() 함수를 여러번 호출했을 때 정상의 경우 엑셀 형식의 파일로 추출되어야 한다")
+    public void save_called_multiple_time_then_they_have_to_export_xlsx_file() {
+        // given
+        Dummy dummy1 = Dummy.of(1L);
+        Dummy dummy2 = Dummy.of(2L);
+
+        // when
+        jpaexlRepository.save(dummy1);
+        jpaexlRepository.save(dummy2);
+    }
+
+    @Test
+    @DisplayName("")
+    public void findById_test() {
+        jpaexlRepository.findById(1L);
     }
 }
