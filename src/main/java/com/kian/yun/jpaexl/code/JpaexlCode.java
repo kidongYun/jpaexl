@@ -7,7 +7,10 @@ import lombok.Getter;
 @AllArgsConstructor
 public enum JpaexlCode {
     /* REFLECTION */
-    FAIL_TO_FIND_FIELD_MATCHED_ANNOTATION_TYPE("RF0000", "Fields don't have matched annotation type.")
+    FAIL_TO_FIND_FIELD_MATCHED_ANNOTATION_TYPE("RF0000", "Fields don't have matched annotation type."),
+
+    /* EXCEL */
+    FAIL_TO_FIND_ID_CELL_IN_SCHEMA("XL0000", "Id cell can't be found at Schema row.")
     ;
 
     private final String name;

@@ -14,7 +14,7 @@ class SimpleJpaexlRepositoryTest {
 
     @BeforeEach
     public void setUp() {
-        this.jpaexlRepository = new SimpleJpaexlRepository<>(PersistenceManager.getInstance());
+        this.jpaexlRepository = new SimpleJpaexlRepository<>(PersistenceManager.getInstance(), Dummy.class);
     }
 
     @Test

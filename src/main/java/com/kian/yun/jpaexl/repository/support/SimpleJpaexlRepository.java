@@ -10,16 +10,17 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Repository;
 
 import java.lang.reflect.Field;
-import java.util.Arrays;
 import java.util.Optional;
 
 @Slf4j
 @Repository
 public class SimpleJpaexlRepository<T, ID> implements JpaexlRepository<T, ID> {
     private final PersistenceManager persistenceManager;
+    private final Class<T> clazz;
 
-    public SimpleJpaexlRepository(PersistenceManager persistenceManager) {
+    public SimpleJpaexlRepository(PersistenceManager persistenceManager, Class<T> clazz) {
         this.persistenceManager = persistenceManager;
+        this.clazz = clazz;
     }
 
     @Override
@@ -42,7 +43,7 @@ public class SimpleJpaexlRepository<T, ID> implements JpaexlRepository<T, ID> {
                 tuple.add(Data.of(field.getName(), field.get(entity)));
             }
 
-            Table.getInstance(ReflectionUtils.className(entity)).insert(tuple);
+            Table.getInstance(ReflectionUtils.className(clazz.getSimpleName())).insert(tuple);
 
         } catch (IllegalAccessException e) {
             e.printStackTrace();
@@ -58,9 +59,7 @@ public class SimpleJpaexlRepository<T, ID> implements JpaexlRepository<T, ID> {
 
     @Override
     public Optional<T> findById(ID id) {
-        log.info(this.getClass().getGenericSuperclass().getTypeName());
-        log.info(Arrays.toString(this.getClass().getGenericInterfaces()));
-
+        Table.getInstance(clazz.getSimpleName()).findById();
         return Optional.empty();
     }
 

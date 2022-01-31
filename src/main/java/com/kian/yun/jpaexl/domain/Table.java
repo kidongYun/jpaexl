@@ -1,12 +1,14 @@
 package com.kian.yun.jpaexl.domain;
 
 import com.kian.yun.jpaexl.code.Constants;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
+@Slf4j
 public class Table {
     private final PersistenceManager persistenceManager;
     private final String name;
@@ -35,6 +37,11 @@ public class Table {
                 .collect(Collectors.toList()));
 
         persistenceManager.flush();
+    }
+
+    public void findById() {
+        log.info(persistenceManager.findValue(name, 1, 2));
+        log.info(persistenceManager.findRowById(name, ""));
     }
 
     private Sheet createTable(Sheet table, List<Schema<?>> schemas) {
