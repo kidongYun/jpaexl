@@ -12,16 +12,16 @@ import org.springframework.stereotype.Repository;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
+import java.util.Arrays;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Repository
 public class SimpleJpaexlRepository<T, ID> implements JpaexlRepository<T, ID> {
-    private final PersistenceManager persistenceManager;
     private final Class<T> clazz;
 
-    public SimpleJpaexlRepository(PersistenceManager persistenceManager, Class<T> clazz) {
-        this.persistenceManager = persistenceManager;
+    public SimpleJpaexlRepository(Class<T> clazz) {
         this.clazz = clazz;
     }
 
@@ -42,7 +42,7 @@ public class SimpleJpaexlRepository<T, ID> implements JpaexlRepository<T, ID> {
 
             for(Field field : entity.getClass().getDeclaredFields()) {
                 field.setAccessible(true);
-                tuple.add(Data.of(field.getName(), field.get(entity)));
+                tuple.add(Data.of(field.getName(), Arrays.stream(field.getAnnotations()).collect(Collectors.toList()), field.get(entity)));
             }
 
             Table.getInstance(ReflectionUtils.className(clazz.getSimpleName())).insert(tuple);
@@ -61,25 +61,25 @@ public class SimpleJpaexlRepository<T, ID> implements JpaexlRepository<T, ID> {
 
     @Override
     public Optional<T> findById(ID id) {
-//        Tuple tuple = Table.getInstance(clazz.getSimpleName()).findById(String.valueOf(id));
+        Tuple tuple = Table.getInstance(clazz.getSimpleName()).findById(String.valueOf(id));
+
+        Class<?>[] schemaTypes = tuple.getTuple().stream().map(d -> d.getSchema().getType()).collect(Collectors.toList()).toArray(new Class[]{});
+        Object[] values = tuple.getTuple().stream().map(Data::getValue).collect(Collectors.toList()).toArray(new Object[]{});
 
         try {
-            Constructor<T> constructor = clazz.getConstructor(Long.class, String.class, String.class, String.class);
-            T instance = constructor.newInstance(1L, "col1", "col2", "col3");
+            Constructor<T> constructor = clazz.getConstructor(schemaTypes);
+            T instance = constructor.newInstance(values);
 
-            log.info(instance.toString());
+            return Optional.of(instance);
 
-        } catch (NoSuchMethodException e) {
+        } catch (NoSuchMethodException
+                | InvocationTargetException
+                | InstantiationException
+                | IllegalAccessException e) {
+
             e.printStackTrace();
-        } catch (InvocationTargetException e) {
-            e.printStackTrace();
-        } catch (InstantiationException e) {
-            e.printStackTrace();
-        } catch (IllegalAccessException e) {
-            e.printStackTrace();
+            return Optional.empty();
         }
-
-        return Optional.empty();
     }
 
     @Override

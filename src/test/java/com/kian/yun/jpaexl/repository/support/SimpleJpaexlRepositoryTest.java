@@ -1,6 +1,5 @@
 package com.kian.yun.jpaexl.repository.support;
 
-import com.kian.yun.jpaexl.domain.PersistenceManager;
 import com.kian.yun.jpaexl.repository.JpaexlRepository;
 import com.kian.yun.jpaexl.repository.helper.Dummy;
 import lombok.extern.slf4j.Slf4j;
@@ -14,7 +13,7 @@ class SimpleJpaexlRepositoryTest {
 
     @BeforeEach
     public void setUp() {
-        this.jpaexlRepository = new SimpleJpaexlRepository<>(PersistenceManager.getInstance(), Dummy.class);
+        this.jpaexlRepository = new SimpleJpaexlRepository<>(Dummy.class);
     }
 
     @Test
@@ -42,6 +41,12 @@ class SimpleJpaexlRepositoryTest {
     @Test
     @DisplayName("")
     public void findById_test() {
-        jpaexlRepository.findById(1L);
+        // given
+        Dummy dummy = jpaexlRepository.findById(2L).orElse(null);
+
+        // when
+        log.info(dummy.toString());
+
+        // then
     }
 }

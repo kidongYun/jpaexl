@@ -6,4 +6,5 @@
 
 ## 2022.2.4
 
-- Implement type at Table
+- Implement findById (complete)
+- Add annotation type in excel when the data is saved
