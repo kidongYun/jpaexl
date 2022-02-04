@@ -1,13 +1,17 @@
 package com.kian.yun.jpaexl.repository.helper;
 
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
+import lombok.ToString;
 
 import javax.persistence.Entity;
 import javax.persistence.Id;
 
 @Getter
 @Builder
+@AllArgsConstructor
+@ToString
 @Entity
 public class Dummy {
     @Id

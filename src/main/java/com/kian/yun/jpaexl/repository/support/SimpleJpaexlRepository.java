@@ -9,7 +9,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Repository;
 
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
 import java.util.Optional;
 
 @Slf4j
@@ -59,7 +61,24 @@ public class SimpleJpaexlRepository<T, ID> implements JpaexlRepository<T, ID> {
 
     @Override
     public Optional<T> findById(ID id) {
-        Table.getInstance(clazz.getSimpleName()).findById();
+//        Tuple tuple = Table.getInstance(clazz.getSimpleName()).findById(String.valueOf(id));
+
+        try {
+            Constructor<T> constructor = clazz.getConstructor(Long.class, String.class, String.class, String.class);
+            T instance = constructor.newInstance(1L, "col1", "col2", "col3");
+
+            log.info(instance.toString());
+
+        } catch (NoSuchMethodException e) {
+            e.printStackTrace();
+        } catch (InvocationTargetException e) {
+            e.printStackTrace();
+        } catch (InstantiationException e) {
+            e.printStackTrace();
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
+        }
+
         return Optional.empty();
     }
 

@@ -3,9 +3,9 @@ package com.kian.yun.jpaexl.domain;
 import com.kian.yun.jpaexl.code.Constants;
 import com.kian.yun.jpaexl.code.JpaexlCode;
 import com.kian.yun.jpaexl.exception.JpaexlException;
+import com.kian.yun.jpaexl.util.ReflectionUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.ss.usermodel.Cell;
-import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
@@ -13,6 +13,9 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
+import java.util.Arrays;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.IntStream;
@@ -54,31 +57,67 @@ public class PersistenceManager {
         }
     }
 
-    public String findValue(String sheetName, int rowCursor, int cellCursor) {
-        return Optional.ofNullable(workbook.getSheet(sheetName).getRow(rowCursor).getCell(cellCursor))
-                .orElseThrow(() -> new JpaexlException(JpaexlCode.FAIL_TO_FIND_DATA)).getStringCellValue();
+    public Optional<String> findValue(String sheetName, int rowCursor, int cellCursor) {
+        Cell cell = workbook.getSheet(sheetName).getRow(rowCursor).getCell(cellCursor);
+
+        if(Objects.isNull(cell)) {
+            return Optional.empty();
+        }
+
+        return Optional.of(cell.getStringCellValue());
+    }
+
+    public Optional<Data<?>> findData(String sheetName, int rowCursor, int cellCursor) {
+       try {
+           String schemaType = findValue(sheetName, Constants.SCHEMA_TYPE_CURSOR, cellCursor)
+                   .orElseThrow(() -> JpaexlException.of(JpaexlCode.FAIL_TO_FIND_SCHEMA_TYPE));
+
+           String schemaName = findValue(sheetName, Constants.SCHEMA_NAME_CURSOR, cellCursor)
+                   .orElseThrow(() -> JpaexlException.of(JpaexlCode.FAIL_TO_FIND_SCHEMA_NAME));
+
+           String value = findValue(sheetName, rowCursor, cellCursor)
+                   .orElseThrow(() -> JpaexlException.of(JpaexlCode.FAIL_TO_FIND_DATA));
+
+           Class<?> clazz = Class.forName(ReflectionUtils.classType(schemaType));
+           Constructor<?> constructor = clazz.getConstructor(String.class);
+           Object obj = constructor.newInstance(value);
+
+           return Optional.of(Data.of(schemaName, obj));
+
+       } catch (ClassNotFoundException
+               | NoSuchMethodException
+               | InvocationTargetException
+               | InstantiationException
+               | IllegalAccessException
+               e) {
+           e.printStackTrace();
+           return Optional.empty();
+       } catch (JpaexlException e) {
+           return Optional.empty();
+       }
     }
 
     public Tuple findById(String sheetName, String id) {
-        int idRowCursor = findRowCursorById(sheetName, id);
-        log.info(idRowCursor + "");
+        int cursorIdRow = findCursorIdRow(sheetName, id);
+
+        Tuple tuple = Tuple.empty();
 
         for(int i=Constants.CURSOR_CELL_INITIAL_VALUE; i<=Constants.CURSOR_CELL_MAX_VALUE; i++) {
-            String data = findValue(sheetName, idRowCursor, i);
+            Data<?> data = findData(sheetName, cursorIdRow, i).orElse(null);
 
             if(Objects.isNull(data)) {
                 break;
             }
 
-            log.info(findValue(sheetName, idRowCursor, i));
+            tuple.add(data);
         }
 
-        return Tuple.empty();
+        return tuple;
     }
 
     private int findCursorIdCell(String sheetName, int size) {
         for(int i=1; i<=size; i++) {
-            if("ID".equalsIgnoreCase(findValue(sheetName, Constants.SCHEMA_NAME_CURSOR, i))) {
+            if("ID".equalsIgnoreCase(findValue(sheetName, Constants.SCHEMA_NAME_CURSOR, i).orElse(null))) {
                 return i;
             }
         }
@@ -86,11 +125,11 @@ public class PersistenceManager {
         throw new JpaexlException(JpaexlCode.FAIL_TO_FIND_ID_CELL_IN_SCHEMA);
     }
 
-    private int findRowCursorById(String sheetName, String id) {
+    private int findCursorIdRow(String sheetName, String id) {
         int idCellCursor = findCursorIdCell(sheetName, 4);
 
         return IntStream.range(Constants.CURSOR_ROW_INITIAL_VALUE, Constants.CURSOR_ROW_MAX_VALUE)
-                .filter(v -> id.equals(findValue(sheetName, v, idCellCursor)))
+                .filter(v -> id.equals(findValue(sheetName, v, idCellCursor).orElse(null)))
                 .findFirst()
                 .orElseThrow(() -> new JpaexlException(JpaexlCode.FAIL_TO_FIND_ROW_BY_ID));
     }

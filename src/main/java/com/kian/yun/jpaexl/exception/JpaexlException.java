@@ -13,4 +13,12 @@ public class JpaexlException extends RuntimeException {
         super(msg);
         this.code = code;
     }
+
+    public static JpaexlException of(JpaexlCode code) {
+        return new JpaexlException(code, code.getDesc());
+    }
+
+    public static JpaexlException of(JpaexlCode code, String msg) {
+        return new JpaexlException(code, msg);
+    }
 }

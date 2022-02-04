@@ -32,6 +32,7 @@ public class Table {
                 createTable(persistenceManager.createSheet(name), Schema.of(tuple));
 
         Row row = table.createRow(this.getRowCursor());
+
         createTuple(row, tuple.getTuple().stream()
                 .map(data -> String.valueOf(data.getValue()))
                 .collect(Collectors.toList()));
@@ -39,9 +40,8 @@ public class Table {
         persistenceManager.flush();
     }
 
-    public void findById() {
-        log.info(persistenceManager.findValue(name, 1, 2));
-        log.info(persistenceManager.findById(name, "1") + "");
+    public Tuple findById(String id) {
+        return persistenceManager.findById(name, id);
     }
 
     private Sheet createTable(Sheet table, List<Schema<?>> schemas) {

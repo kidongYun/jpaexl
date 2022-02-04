@@ -25,4 +25,8 @@ public class ReflectionUtils {
     public static String className(Object entity) {
         return entity.getClass().getSimpleName();
     }
+
+    public static String classType(String str) {
+        return str.split(" ")[1];
+    }
 }
