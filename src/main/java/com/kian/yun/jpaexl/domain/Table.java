@@ -41,7 +41,7 @@ public class Table {
 
     public void findById() {
         log.info(persistenceManager.findValue(name, 1, 2));
-        log.info(persistenceManager.findRowById(name, ""));
+        log.info(persistenceManager.findById(name, "1") + "");
     }
 
     private Sheet createTable(Sheet table, List<Schema<?>> schemas) {
