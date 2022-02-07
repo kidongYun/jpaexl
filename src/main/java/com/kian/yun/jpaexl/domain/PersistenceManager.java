@@ -57,14 +57,8 @@ public class PersistenceManager {
         }
     }
 
-    public Optional<String> findValue(String sheetName, int rowCursor, int cellCursor) {
-        Cell cell = workbook.getSheet(sheetName).getRow(rowCursor).getCell(cellCursor);
-
-        if(Objects.isNull(cell)) {
-            return Optional.empty();
-        }
-
-        return Optional.of(cell.getStringCellValue());
+    public void insertValue(String sheetName, int rowCursor, int cellCursor) {
+        
     }
 
     public Optional<Data<?>> findData(String sheetName, int rowCursor, int cellCursor) {
@@ -82,7 +76,9 @@ public class PersistenceManager {
            Constructor<?> constructor = clazz.getConstructor(String.class);
            Object obj = constructor.newInstance(value);
 
-           return Optional.of(Data.of(schemaName, obj));
+//           return Optional.of(Data.of(schemaName, obj));
+
+           return Optional.empty();
 
        } catch (ClassNotFoundException
                | NoSuchMethodException
@@ -113,6 +109,16 @@ public class PersistenceManager {
         }
 
         return tuple;
+    }
+
+    private Optional<String> findValue(String sheetName, int rowCursor, int cellCursor) {
+        Cell cell = workbook.getSheet(sheetName).getRow(rowCursor).getCell(cellCursor);
+
+        if(Objects.isNull(cell)) {
+            return Optional.empty();
+        }
+
+        return Optional.of(cell.getStringCellValue());
     }
 
     private int findCursorIdCell(String sheetName, int size) {

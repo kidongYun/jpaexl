@@ -7,4 +7,7 @@
 ## 2022.2.4
 
 - Implement findById (complete)
+
+## 2022.2.8
+
 - Add annotation type in excel when the data is saved
