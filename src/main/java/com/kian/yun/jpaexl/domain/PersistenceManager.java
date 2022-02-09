@@ -15,7 +15,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
-import java.util.Arrays;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.IntStream;
@@ -58,15 +57,15 @@ public class PersistenceManager {
     }
 
     public void insertValue(String sheetName, int rowCursor, int cellCursor) {
-        
+
     }
 
     public Optional<Data<?>> findData(String sheetName, int rowCursor, int cellCursor) {
        try {
-           String schemaType = findValue(sheetName, Constants.SCHEMA_TYPE_CURSOR, cellCursor)
+           String schemaType = findValue(sheetName, Constants.SCHEMA_TYPE_CUR, cellCursor)
                    .orElseThrow(() -> JpaexlException.of(JpaexlCode.FAIL_TO_FIND_SCHEMA_TYPE));
 
-           String schemaName = findValue(sheetName, Constants.SCHEMA_NAME_CURSOR, cellCursor)
+           String schemaName = findValue(sheetName, Constants.SCHEMA_NAME_CUR, cellCursor)
                    .orElseThrow(() -> JpaexlException.of(JpaexlCode.FAIL_TO_FIND_SCHEMA_NAME));
 
            String value = findValue(sheetName, rowCursor, cellCursor)
@@ -98,7 +97,7 @@ public class PersistenceManager {
 
         Tuple tuple = Tuple.empty();
 
-        for(int i=Constants.CURSOR_CELL_INITIAL_VALUE; i<=Constants.CURSOR_CELL_MAX_VALUE; i++) {
+        for(int i=Constants.CUR_CELL_INIT_VAL; i<=Constants.CURSOR_CELL_MAX_VALUE; i++) {
             Data<?> data = findData(sheetName, cursorIdRow, i).orElse(null);
 
             if(Objects.isNull(data)) {
@@ -123,7 +122,7 @@ public class PersistenceManager {
 
     private int findCursorIdCell(String sheetName, int size) {
         for(int i=1; i<=size; i++) {
-            if("ID".equalsIgnoreCase(findValue(sheetName, Constants.SCHEMA_NAME_CURSOR, i).orElse(null))) {
+            if("ID".equalsIgnoreCase(findValue(sheetName, Constants.SCHEMA_NAME_CUR, i).orElse(null))) {
                 return i;
             }
         }
@@ -134,7 +133,7 @@ public class PersistenceManager {
     private int findCursorIdRow(String sheetName, String id) {
         int idCellCursor = findCursorIdCell(sheetName, 4);
 
-        return IntStream.range(Constants.CURSOR_ROW_INITIAL_VALUE, Constants.CURSOR_ROW_MAX_VALUE)
+        return IntStream.range(Constants.CUR_ROW_INIT_VAL, Constants.CURSOR_ROW_MAX_VALUE)
                 .filter(v -> id.equals(findValue(sheetName, v, idCellCursor).orElse(null)))
                 .findFirst()
                 .orElseThrow(() -> new JpaexlException(JpaexlCode.FAIL_TO_FIND_ROW_BY_ID));

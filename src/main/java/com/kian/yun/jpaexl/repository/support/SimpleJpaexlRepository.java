@@ -13,6 +13,7 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -45,7 +46,8 @@ public class SimpleJpaexlRepository<T, ID> implements JpaexlRepository<T, ID> {
                 tuple.add(Data.of(field.getName(), Arrays.stream(field.getAnnotations()).collect(Collectors.toList()), field.get(entity)));
             }
 
-            Table.getInstance(ReflectionUtils.className(clazz.getSimpleName())).insert(tuple);
+            List<Schema<?>> schemas = tuple.getValue().stream().map(Data::getSchema).collect(Collectors.toList());
+            SimpleTable.getInstance(ReflectionUtils.className(clazz.getSimpleName()), schemas).insert(tuple);
 
         } catch (IllegalAccessException e) {
             e.printStackTrace();
@@ -61,10 +63,11 @@ public class SimpleJpaexlRepository<T, ID> implements JpaexlRepository<T, ID> {
 
     @Override
     public Optional<T> findById(ID id) {
-        Tuple tuple = Table.getInstance(clazz.getSimpleName()).findById(String.valueOf(id));
+//        Tuple tuple = SimpleTable.getInstance(clazz.getSimpleName()).findById(String.valueOf(id));
+        Tuple tuple = Tuple.empty();
 
-        Class<?>[] schemaTypes = tuple.getTuple().stream().map(d -> d.getSchema().getType()).collect(Collectors.toList()).toArray(new Class[]{});
-        Object[] values = tuple.getTuple().stream().map(Data::getValue).collect(Collectors.toList()).toArray(new Object[]{});
+        Class<?>[] schemaTypes = tuple.getValue().stream().map(d -> d.getSchema().getType()).collect(Collectors.toList()).toArray(new Class[]{});
+        Object[] values = tuple.getValue().stream().map(Data::getValue).collect(Collectors.toList()).toArray(new Object[]{});
 
         try {
             Constructor<T> constructor = clazz.getConstructor(schemaTypes);

@@ -11,3 +11,10 @@
 ## 2022.2.8
 
 - Add annotation type in excel when the data is saved
+
+## 2022.2.9
+
+- refactoring persistenceManager, table
+  - findData, insertValue move from PersistenceManager to Table. 
+  - Use Sheet
+- Add annotation type in excel when the data is saved

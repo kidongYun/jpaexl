@@ -9,10 +9,10 @@ import java.util.List;
 @Getter
 @Builder
 public class Tuple {
-    private final List<Data<?>> tuple;
+    private final List<Data<?>> value;
 
     private Tuple(List<Data<?>> tuple) {
-        this.tuple = tuple;
+        this.value = tuple;
     }
 
     public static Tuple empty() {
@@ -24,6 +24,6 @@ public class Tuple {
     }
 
     public void add(Data<?> data) {
-        tuple.add(data);
+        value.add(data);
     }
 }
