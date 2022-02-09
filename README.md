@@ -18,3 +18,5 @@
   - findData, insertValue move from PersistenceManager to Table. 
   - Use Sheet
 - Add annotation type in excel when the data is saved
+- handle exception jpaexl.xlsx FileNotFoundException
+- resolve IndexOutOfBoundsException

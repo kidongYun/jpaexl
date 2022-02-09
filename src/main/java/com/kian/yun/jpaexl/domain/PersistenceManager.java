@@ -5,12 +5,15 @@ import com.kian.yun.jpaexl.code.JpaexlCode;
 import com.kian.yun.jpaexl.exception.JpaexlException;
 import com.kian.yun.jpaexl.util.ReflectionUtils;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.poi.EmptyFileException;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.xssf.streaming.SXSSFWorkbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.lang.reflect.Constructor;
@@ -32,6 +35,9 @@ public class PersistenceManager {
         try {
             FileInputStream file = new FileInputStream("./jpaexl.xlsx");
             return getInstance(new XSSFWorkbook(file));
+        } catch (FileNotFoundException
+                | EmptyFileException e) {
+            return getInstance(new XSSFWorkbook());
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -52,7 +58,7 @@ public class PersistenceManager {
             FileOutputStream fos = new FileOutputStream("./jpaexl.xlsx");
             this.workbook.write(fos);
         } catch (IOException e) {
-            log.debug(e.toString());
+            log.info(e.toString());
         }
     }
 

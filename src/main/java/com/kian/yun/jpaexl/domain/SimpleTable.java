@@ -6,6 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.ss.usermodel.Sheet;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -24,11 +25,11 @@ public class SimpleTable implements Table {
     private SimpleTable(String name, List<Schema<?>> schemas, int rowCur, int cellCur) {
         this.persistenceManager = PersistenceManager.getInstance();
         this.sheet = (persistenceManager.isExist(name)) ? persistenceManager.getSheet(name) : persistenceManager.createSheet(name);
-        initTable(schemas);
-
         this.rowCur = rowCur;
         this.cellCur = cellCur;
-        this.cellSize = cellCur + schemas.size();
+        this.cellSize = Constants.CUR_CELL_INIT_VAL + schemas.size() - 1;
+
+        initTable(schemas);
     }
 
     @Override
@@ -50,11 +51,15 @@ public class SimpleTable implements Table {
         List<String> schemaTypes = schemas.stream().map(s -> s.getType().getName()).collect(Collectors.toList());
         insertRow(schemaTypes, Constants.SCHEMA_TYPE_CUR);
 
-        for(int i=0; i<schemas.size(); i++) {
-            for(int j=0; j<schemas.get(i).getAnnotations().size(); j++) {
-                insertValue(schemas.get(i).getAnnotations().get(j).annotationType().getName(), Constants.SCHEMA_ANN_START_CUR + j, Constants.CUR_CELL_INIT_VAL + i);
-            }
-        }
+//        for(int i=0; i<schemas.size(); i++) {
+//            log.info("schemas.size : {}, i : {}", schemas.size(), i);
+//            log.info("ann size: {}", schemas.get(i).getAnnotations().size());
+//
+//            for(int j=0; j<schemas.get(i).getAnnotations().size(); j++) {
+//                log.info("i: {}, j: {}", i, j);
+//                insertValue(schemas.get(i).getAnnotations().get(j).annotationType().getName(), Constants.SCHEMA_ANN_START_CUR + j, Constants.CUR_CELL_INIT_VAL + i);
+//            }
+//        }
     }
 
     private void insertTuple(Tuple tuple, int rowCur) {
@@ -68,7 +73,7 @@ public class SimpleTable implements Table {
     }
 
     private void insertValue(String value, int rowCur, int cellCur) {
-        sheet.createRow(rowCur).createCell(cellCur).setCellValue(value);
+        Optional.ofNullable(sheet.getRow(rowCur)).orElse(sheet.createRow(rowCur)).createCell(cellCur).setCellValue(value);
     }
 
     private int getRowCur() {
