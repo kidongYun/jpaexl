@@ -3,9 +3,11 @@ package com.kian.yun.jpaexl.domain;
 import com.kian.yun.jpaexl.code.Constants;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -51,15 +53,11 @@ public class SimpleTable implements Table {
         List<String> schemaTypes = schemas.stream().map(s -> s.getType().getName()).collect(Collectors.toList());
         insertRow(schemaTypes, Constants.SCHEMA_TYPE_CUR);
 
-//        for(int i=0; i<schemas.size(); i++) {
-//            log.info("schemas.size : {}, i : {}", schemas.size(), i);
-//            log.info("ann size: {}", schemas.get(i).getAnnotations().size());
-//
-//            for(int j=0; j<schemas.get(i).getAnnotations().size(); j++) {
-//                log.info("i: {}, j: {}", i, j);
-//                insertValue(schemas.get(i).getAnnotations().get(j).annotationType().getName(), Constants.SCHEMA_ANN_START_CUR + j, Constants.CUR_CELL_INIT_VAL + i);
-//            }
-//        }
+        for(int i=0; i<schemas.size(); i++) {
+            for(int j=0; j<schemas.get(i).getAnnotations().size(); j++) {
+                insertValue(schemas.get(i).getAnnotations().get(j).annotationType().getName(), Constants.SCHEMA_ANN_START_CUR + j, Constants.CUR_CELL_INIT_VAL + i);
+            }
+        }
     }
 
     private void insertTuple(Tuple tuple, int rowCur) {
@@ -73,7 +71,15 @@ public class SimpleTable implements Table {
     }
 
     private void insertValue(String value, int rowCur, int cellCur) {
-        Optional.ofNullable(sheet.getRow(rowCur)).orElse(sheet.createRow(rowCur)).createCell(cellCur).setCellValue(value);
+//        Optional.ofNullable(sheet.getRow(rowCur)).orElse(sheet.createRow(rowCur)).createCell(cellCur).setCellValue(value);
+
+        Row row = sheet.getRow(rowCur);
+
+        if(Objects.isNull(row)) {
+            row = sheet.createRow(rowCur);
+        }
+
+        row.createCell(cellCur).setCellValue(value);
     }
 
     private int getRowCur() {

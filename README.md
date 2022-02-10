@@ -20,3 +20,8 @@
 - Add annotation type in excel when the data is saved
 - handle exception jpaexl.xlsx FileNotFoundException
 - resolve IndexOutOfBoundsException
+
+## 2022.2.10
+
+- resolve IndexOutOfBoundsException (complete)
+
