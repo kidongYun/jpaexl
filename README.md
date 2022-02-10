@@ -24,4 +24,25 @@
 ## 2022.2.10
 
 - resolve IndexOutOfBoundsException (complete)
+  - what is difference between the below two codes.
+```java
+class SimpleTable {
+  private void insertValue(String value, int rowCur, int cellCur) {
+    Row row = sheet.getRow(rowCur);
 
+    if (Objects.isNull(row)) {
+      row = sheet.createRow(rowCur);
+    }
+
+    row.createCell(cellCur).setCellValue(value);
+  }
+}
+```
+
+```java
+class SimpleTable {
+  private void insertValue(String value, int rowCur, int cellCur) {
+      Optional.ofNullable(sheet.getRow(rowCur)).orElse(sheet.createRow(rowCur)).createCell(cellCur).setCellValue(value);
+  }
+}
+```
