@@ -25,4 +25,8 @@ public class Data<T> {
                 .value(value)
                 .build();
     }
+
+    public static <T> Data<T> of(Schema<T> schema, T value) {
+        return new Data<>(schema, value);
+    }
 }

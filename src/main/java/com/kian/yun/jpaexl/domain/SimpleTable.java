@@ -12,7 +12,6 @@ import org.apache.poi.ss.usermodel.Sheet;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -53,26 +52,27 @@ public class SimpleTable implements Table {
 
     @Override
     public Iterable<Tuple> findAll() {
+        findTuple(Cursor.row(Constants.CUR_ROW_INIT_VAL));
         return null;
     }
 
-    public Tuple findById(String sheetName, String id) {
-        int cursorIdRow = findCursorIdRow(sheetName, id);
-
-        Tuple tuple = Tuple.empty();
-
-        for(int i=Constants.CUR_CELL_INIT_VAL; i<=Constants.CURSOR_CELL_MAX_VALUE; i++) {
-            Data<?> data = findData(sheetName, cursorIdRow, i).orElse(null);
-
-            if(Objects.isNull(data)) {
-                break;
-            }
-
-            tuple.add(data);
-        }
-
-        return tuple;
-    }
+//    public Tuple findById(String sheetName, String id) {
+//        int cursorIdRow = findCursorIdRow(sheetName, id);
+//
+//        Tuple tuple = Tuple.empty();
+//
+//        for(int i=Constants.CUR_CELL_INIT_VAL; i<=Constants.CURSOR_CELL_MAX_VALUE; i++) {
+//            Data<?> data = findData(sheetName, cursorIdRow, i).orElse(null);
+//
+//            if(Objects.isNull(data)) {
+//                break;
+//            }
+//
+//            tuple.add(data);
+//        }
+//
+//        return tuple;
+//    }
 
     private void initTable(List<Schema<?>> schemas) {
         List<String> schemaNames = schemas.stream().map(Schema::getName).collect(Collectors.toList());
@@ -88,27 +88,45 @@ public class SimpleTable implements Table {
         }
     }
 
-    private int findRowCur(String value) {
-        int idCellCursor = findCursorIdCell(sheetName, 4);
+//    private int findRowCur(String value) {
+//        int idCellCursor = findCursorIdCell(sheetName, 4);
+//
+//        return IntStream.range(Constants.CUR_ROW_INIT_VAL, Constants.CURSOR_ROW_MAX_VALUE)
+//                .filter(v -> id.equals(findValue(sheetName, v, idCellCursor).orElse(null)))
+//                .findFirst()
+//                .orElseThrow(() -> new JpaexlException(JpaexlCode.FAIL_TO_FIND_ROW_BY_ID));
+//    }
+//
+//    private int findCellCur(String value, int rowCur) {
+//        for(int i=1; i<=cellSize; i++) {
+//            if("ID".equalsIgnoreCase(findValue(sheetName, Constants.SCHEMA_NAME_CUR, i).orElse(null))) {
+//                return i;
+//            }
+//        }
+//
+//        throw new JpaexlException(JpaexlCode.FAIL_TO_FIND_ID_CELL_IN_SCHEMA);
+//    }
+//
+//    private Cursor findCursor(String value) {
+//        return Cursor.base();
+//    }
 
-        return IntStream.range(Constants.CUR_ROW_INIT_VAL, Constants.CURSOR_ROW_MAX_VALUE)
-                .filter(v -> id.equals(findValue(sheetName, v, idCellCursor).orElse(null)))
-                .findFirst()
-                .orElseThrow(() -> new JpaexlException(JpaexlCode.FAIL_TO_FIND_ROW_BY_ID));
-    }
+    @SuppressWarnings("unchecked")
+    private <T> Optional<Schema<T>> findSchema(Cursor cursor) {
+        String schemaType = findValue(Cursor.of(Constants.SCHEMA_TYPE_CUR, cursor.getCell()))
+                .orElseThrow(() -> JpaexlException.of(JpaexlCode.FAIL_TO_FIND_SCHEMA_TYPE));
 
-    private int findCellCur(String value, int rowCur) {
-        for(int i=1; i<=cellSize; i++) {
-            if("ID".equalsIgnoreCase(findValue(sheetName, Constants.SCHEMA_NAME_CUR, i).orElse(null))) {
-                return i;
-            }
+        String schemaName = findValue(Cursor.of(Constants.SCHEMA_NAME_CUR, cursor.getCell()))
+                .orElseThrow(() -> JpaexlException.of(JpaexlCode.FAIL_TO_FIND_SCHEMA_NAME));
+
+        try {
+            Schema<T> schema = Schema.of((Class<T>) Class.forName(ReflectionUtils.classType(schemaType)), schemaName);
+            return Optional.of(schema);
+
+        } catch (ClassNotFoundException | JpaexlException e) {
+            e.printStackTrace();
+            return Optional.empty();
         }
-
-        throw new JpaexlException(JpaexlCode.FAIL_TO_FIND_ID_CELL_IN_SCHEMA);
-    }
-
-    private Cursor findCursor(String value) {
-        return Cursor.base();
     }
 
     private Optional<Tuple> findTuple(Cursor cursor) {
@@ -120,42 +138,25 @@ public class SimpleTable implements Table {
         return Optional.of(Tuple.of(data));
     }
 
-    private Optional<Data<?>> findData(Cursor cursor) {
+    @SuppressWarnings("unchecked")
+    private <T> Optional<Data<T>> findData(Cursor cursor) {
+        Schema<T> schema = (Schema<T>) findSchema(cursor).orElseThrow(() -> JpaexlException.of(JpaexlCode.SCHEMA_IS_NULL));
+
+        String value = findValue(Cursor.of(cursor.getRow(), cursor.getCell()))
+                .orElseThrow(() -> JpaexlException.of(JpaexlCode.FAIL_TO_FIND_DATA));
+
         try {
-            String schemaType = findValue(Cursor.of(Constants.SCHEMA_TYPE_CUR, cursor.getCell()))
-                    .orElseThrow(() -> JpaexlException.of(JpaexlCode.FAIL_TO_FIND_SCHEMA_TYPE));
+            Constructor<T> constructor = schema.getType().getConstructor(String.class);
+            T instance = constructor.newInstance(value);
+           return Optional.of(Data.of(schema, instance));
 
-            String schemaName = findValue(Cursor.of(Constants.SCHEMA_NAME_CUR, cursor.getCell()))
-                    .orElseThrow(() -> JpaexlException.of(JpaexlCode.FAIL_TO_FIND_SCHEMA_NAME));
-
-            List<String> anns = new ArrayList<>();
-            for(int i=Constants.SCHEMA_ANN_START_CUR; i<=Constants.SCHEMA_ANN_END_CUR; i++) {
-                Optional<String> valueOpt = findValue(Cursor.of(i, cursor.getCell()));
-
-                if(valueOpt.isEmpty()) {
-                    break;
-                }
-
-                anns.add(valueOpt.get());
-            }
-
-            String value = findValue(Cursor.of(cursor.getRow(), cursor.getCell()))
-                    .orElseThrow(() -> JpaexlException.of(JpaexlCode.FAIL_TO_FIND_DATA));
-
-            Class<?> clazz = Class.forName(ReflectionUtils.classType(schemaType));
-            Constructor<?> constructor = clazz.getConstructor(String.class);
-            Object obj = constructor.newInstance(value);
-
-           return Optional.of(Data.of(schemaName, obj));
-
-        } catch (ClassNotFoundException
-                | NoSuchMethodException
+        } catch (NoSuchMethodException
                 | InvocationTargetException
                 | InstantiationException
-                | IllegalAccessException
-                e) {
+                | IllegalAccessException e) {
             e.printStackTrace();
             return Optional.empty();
+
         } catch (JpaexlException e) {
             return Optional.empty();
         }

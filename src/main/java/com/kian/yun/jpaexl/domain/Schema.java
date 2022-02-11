@@ -12,4 +12,8 @@ public class Schema<T> {
     private final Class<T> type;
     private final List<Annotation> annotations;
     private final String name;
+
+    public static <T> Schema<T> of(Class<T> type, String name) {
+        return Schema.<T>builder().type(type).name(name).build();
+    }
 }
