@@ -50,4 +50,7 @@ class SimpleTable {
 ## 2022.2.12
 
 - use stream.takewhile() into findCellSize()
-- 
+- implements findAll() method (complete)
+- change findAll() method to get list.
+- resolve the error occurred when save() method are called several.
+- create Asserts object.

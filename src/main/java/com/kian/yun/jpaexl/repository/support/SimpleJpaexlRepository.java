@@ -11,9 +11,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Repository;
 
-import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
@@ -50,7 +48,7 @@ public class SimpleJpaexlRepository<T, ID> implements JpaexlRepository<T, ID> {
             }
 
             List<Schema<?>> schemas = tuple.getValue().stream().map(Data::getSchema).collect(Collectors.toList());
-            SimpleTable.createInstance(ReflectionUtils.className(clazz.getSimpleName()), schemas).insert(tuple);
+            SimpleTable.createOrGetInstance(ReflectionUtils.className(clazz.getSimpleName()), schemas).insert(tuple);
 
         } catch (IllegalAccessException e) {
             e.printStackTrace();
