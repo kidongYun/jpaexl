@@ -19,6 +19,7 @@ public enum JpaexlCode {
     FAIL_TO_FIND_SCHEMA("XL0005", "Schema is not found in Excel"),
     FAIL_TO_FIND_TUPLE("XL0006", "Tuple is not found in Excel"),
     FAIL_TO_FIND_VALUE("XL0007", "String value is not found in Excel"),
+    FAIL_TO_FIND_SCHEMA_ANNOTATION("XL0008", "Schema annotations are not found in Excel")
     ;
 
     private final String name;

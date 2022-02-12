@@ -12,6 +12,7 @@ import org.apache.poi.ss.usermodel.Sheet;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -73,8 +74,7 @@ public class SimpleTable implements Table {
 
     @Override
     public Iterable<Tuple> findAll() {
-        return List.of(findTuple(Cursor.row(Constants.CUR_ROW_INIT_VAL))
-                .orElseThrow(() -> new JpaexlException(JpaexlCode.FAIL_TO_FIND_SCHEMA_TYPE)));
+        return findTuples(Cursor.row(Constants.CUR_ROW_INIT_VAL), Cursor.row(rowSize));
     }
 
 //    public Tuple findById(String sheetName, String id) {
@@ -104,7 +104,7 @@ public class SimpleTable implements Table {
 
         for(int i=0; i<schemas.size(); i++) {
             for(int j=0; j<schemas.get(i).getAnnotations().size(); j++) {
-                insertValue(schemas.get(i).getAnnotations().get(j).annotationType().getName(), Constants.SCHEMA_ANN_START_CUR + j, Constants.CUR_CELL_INIT_VAL + i);
+                insertValue(schemas.get(i).getAnnotations().get(j).annotationType().getName(), Constants.CUR_SCHEMA_ANN_START + j, Constants.CUR_CELL_INIT_VAL + i);
             }
         }
     }
@@ -139,6 +139,17 @@ public class SimpleTable implements Table {
 
         String schemaName = findValue(Cursor.of(Constants.CUR_ROW_SCHEMA_NAME, cursor.getCell()))
                 .orElseThrow(() -> JpaexlException.of(JpaexlCode.FAIL_TO_FIND_SCHEMA_NAME));
+
+        List<String> schemaAnnotations = new ArrayList<>();
+        for(int i=Constants.CUR_SCHEMA_ANN_START; i<Constants.CUR_SCHEMA_ANN_END; i++) {
+            Optional<String> valueOpt = findValue(Cursor.of(Constants.CUR_SCHEMA_ANN_START, cursor.getCell()));
+
+            if(valueOpt.isEmpty()) {
+                break;
+            }
+
+            schemaAnnotations.add(valueOpt.get());
+        }
 
         try {
             Schema<T> schema = Schema.of((Class<T>) Class.forName(schemaType), schemaName);

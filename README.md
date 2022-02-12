@@ -49,8 +49,9 @@ class SimpleTable {
 
 ## 2022.2.12
 
-- use stream.takewhile() into findCellSize()
 - implements findAll() method (complete)
-- change findAll() method to get list.
-- resolve the error occurred when save() method are called several.
+- change findAll() method to get list. (complete)
+- resolve the error occurred when save() method are called several. (complete)
 - create Asserts object.
+- do condition processing whether the same id tuples are already existed in Excel.
+- get annotation from Excel
