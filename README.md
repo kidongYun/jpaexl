@@ -46,3 +46,8 @@ class SimpleTable {
   }
 }
 ```
+
+## 2022.2.12
+
+- use stream.takewhile() into findCellSize()
+- 

@@ -1,8 +1,8 @@
 package com.kian.yun.jpaexl.code;
 
 public class Constants {
-    public static final int SCHEMA_NAME_CUR = 1;
-    public static final int SCHEMA_TYPE_CUR = 2;
+    public static final int CUR_ROW_SCHEMA_NAME = 1;
+    public static final int CUR_ROW_SCHEMA_TYPE = 2;
     public static final int SCHEMA_ANN_START_CUR = 3;
     public static final int SCHEMA_ANN_END_CUR = 5;
 

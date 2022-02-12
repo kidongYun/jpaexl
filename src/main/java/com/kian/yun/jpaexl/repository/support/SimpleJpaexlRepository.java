@@ -1,6 +1,8 @@
 package com.kian.yun.jpaexl.repository.support;
 
+import com.kian.yun.jpaexl.code.JpaexlCode;
 import com.kian.yun.jpaexl.domain.*;
+import com.kian.yun.jpaexl.exception.JpaexlException;
 import com.kian.yun.jpaexl.repository.JpaexlRepository;
 import com.kian.yun.jpaexl.util.ReflectionUtils;
 import lombok.extern.slf4j.Slf4j;
@@ -16,6 +18,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 @Slf4j
 @Repository
@@ -47,7 +50,7 @@ public class SimpleJpaexlRepository<T, ID> implements JpaexlRepository<T, ID> {
             }
 
             List<Schema<?>> schemas = tuple.getValue().stream().map(Data::getSchema).collect(Collectors.toList());
-            SimpleTable.getInstance(ReflectionUtils.className(clazz.getSimpleName()), schemas).insert(tuple);
+            SimpleTable.createInstance(ReflectionUtils.className(clazz.getSimpleName()), schemas).insert(tuple);
 
         } catch (IllegalAccessException e) {
             e.printStackTrace();
@@ -63,26 +66,8 @@ public class SimpleJpaexlRepository<T, ID> implements JpaexlRepository<T, ID> {
 
     @Override
     public Optional<T> findById(ID id) {
-//        Tuple tuple = SimpleTable.getInstance(clazz.getSimpleName()).findById(String.valueOf(id));
-        Tuple tuple = Tuple.empty();
-
-        Class<?>[] schemaTypes = tuple.getValue().stream().map(d -> d.getSchema().getType()).collect(Collectors.toList()).toArray(new Class[]{});
-        Object[] values = tuple.getValue().stream().map(Data::getValue).collect(Collectors.toList()).toArray(new Object[]{});
-
-        try {
-            Constructor<T> constructor = clazz.getConstructor(schemaTypes);
-            T instance = constructor.newInstance(values);
-
-            return Optional.of(instance);
-
-        } catch (NoSuchMethodException
-                | InvocationTargetException
-                | InstantiationException
-                | IllegalAccessException e) {
-
-            e.printStackTrace();
-            return Optional.empty();
-        }
+        Tuple tuple = SimpleTable.getInstance(clazz.getSimpleName()).findById(String.valueOf(id));
+        return ReflectionUtils.createInstanceByTuple(clazz, tuple);
     }
 
     @Override
@@ -92,7 +77,12 @@ public class SimpleJpaexlRepository<T, ID> implements JpaexlRepository<T, ID> {
 
     @Override
     public Iterable<T> findAll() {
-        return null;
+        Iterable<Tuple> tuples = SimpleTable.getInstance(ReflectionUtils.className(clazz.getSimpleName())).findAll();
+
+        return StreamSupport.stream(tuples.spliterator(), false)
+                .map(t -> ReflectionUtils.createInstanceByTuple(clazz, t)
+                        .orElseThrow(() -> new JpaexlException(JpaexlCode.FAIL_TO_CREATE_INSTANCE_BY_TUPLE)))
+                .collect(Collectors.toList());
     }
 
     @Override

@@ -3,7 +3,6 @@ package com.kian.yun.jpaexl.domain;
 import com.kian.yun.jpaexl.code.Constants;
 import com.kian.yun.jpaexl.code.JpaexlCode;
 import com.kian.yun.jpaexl.exception.JpaexlException;
-import com.kian.yun.jpaexl.util.ReflectionUtils;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.ss.usermodel.Cell;
@@ -26,17 +25,25 @@ public class SimpleTable implements Table {
     private Cursor cursor;
     private int cellSize;
 
-    public static SimpleTable getInstance(String name, List<Schema<?>> schemas) {
-        return new SimpleTable(name, schemas, Constants.CUR_ROW_INIT_VAL, Constants.CUR_CELL_INIT_VAL);
+    public static SimpleTable getInstance(String name) {
+        SimpleTable table = new SimpleTable(name, Constants.CUR_ROW_INIT_VAL, Constants.CUR_CELL_INIT_VAL);
+        table.setCellSize(table.findCellSize());
+
+        return table;
     }
 
-    private SimpleTable(String name, List<Schema<?>> schemas, int rowCur, int cellCur) {
+    public static SimpleTable createInstance(String name, List<Schema<?>> schemas) {
+        SimpleTable table = new SimpleTable(name, Constants.CUR_ROW_INIT_VAL, Constants.CUR_CELL_INIT_VAL);
+        table.setCellSize(Constants.CUR_CELL_INIT_VAL + schemas.size() - 1);
+        table.initTable(schemas);
+
+        return table;
+    }
+
+    private SimpleTable(String name, int rowCur, int cellCur) {
         this.persistenceManager = PersistenceManager.getInstance();
         this.sheet = (persistenceManager.isExist(name)) ? persistenceManager.getSheet(name) : persistenceManager.createSheet(name);
         this.cursor = Cursor.of(rowCur, cellCur);
-        this.cellSize = Constants.CUR_CELL_INIT_VAL + schemas.size() - 1;
-
-        initTable(schemas);
     }
 
     @Override
@@ -52,8 +59,8 @@ public class SimpleTable implements Table {
 
     @Override
     public Iterable<Tuple> findAll() {
-        findTuple(Cursor.row(Constants.CUR_ROW_INIT_VAL));
-        return null;
+        return List.of(findTuple(Cursor.row(Constants.CUR_ROW_INIT_VAL))
+                .orElseThrow(() -> new JpaexlException(JpaexlCode.FAIL_TO_FIND_SCHEMA_TYPE)));
     }
 
 //    public Tuple findById(String sheetName, String id) {
@@ -76,10 +83,10 @@ public class SimpleTable implements Table {
 
     private void initTable(List<Schema<?>> schemas) {
         List<String> schemaNames = schemas.stream().map(Schema::getName).collect(Collectors.toList());
-        insertRow(schemaNames, Constants.SCHEMA_NAME_CUR);
+        insertRow(schemaNames, Constants.CUR_ROW_SCHEMA_NAME);
 
         List<String> schemaTypes = schemas.stream().map(s -> s.getType().getName()).collect(Collectors.toList());
-        insertRow(schemaTypes, Constants.SCHEMA_TYPE_CUR);
+        insertRow(schemaTypes, Constants.CUR_ROW_SCHEMA_TYPE);
 
         for(int i=0; i<schemas.size(); i++) {
             for(int j=0; j<schemas.get(i).getAnnotations().size(); j++) {
@@ -113,20 +120,35 @@ public class SimpleTable implements Table {
 
     @SuppressWarnings("unchecked")
     private <T> Optional<Schema<T>> findSchema(Cursor cursor) {
-        String schemaType = findValue(Cursor.of(Constants.SCHEMA_TYPE_CUR, cursor.getCell()))
+        String schemaType = findValue(Cursor.of(Constants.CUR_ROW_SCHEMA_TYPE, cursor.getCell()))
                 .orElseThrow(() -> JpaexlException.of(JpaexlCode.FAIL_TO_FIND_SCHEMA_TYPE));
 
-        String schemaName = findValue(Cursor.of(Constants.SCHEMA_NAME_CUR, cursor.getCell()))
+        String schemaName = findValue(Cursor.of(Constants.CUR_ROW_SCHEMA_NAME, cursor.getCell()))
                 .orElseThrow(() -> JpaexlException.of(JpaexlCode.FAIL_TO_FIND_SCHEMA_NAME));
 
         try {
-            Schema<T> schema = Schema.of((Class<T>) Class.forName(ReflectionUtils.classType(schemaType)), schemaName);
+            Schema<T> schema = Schema.of((Class<T>) Class.forName(schemaType), schemaName);
             return Optional.of(schema);
 
         } catch (ClassNotFoundException | JpaexlException e) {
             e.printStackTrace();
             return Optional.empty();
         }
+    }
+
+    private int findCellSize() {
+        int size = 0;
+        for(int i=Constants.CUR_CELL_INIT_VAL; i<Constants.CURSOR_CELL_MAX_VALUE; i++) {
+            Optional<String> valueOpt = findValue(Cursor.of(Constants.CUR_ROW_SCHEMA_NAME, i));
+
+            if(valueOpt.isEmpty()) {
+                break;
+            }
+
+            size++;
+        }
+
+        return size;
     }
 
     private Optional<Tuple> findTuple(Cursor cursor) {

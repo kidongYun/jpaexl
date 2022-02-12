@@ -3,9 +3,12 @@ package com.kian.yun.jpaexl.repository.support;
 import com.kian.yun.jpaexl.repository.JpaexlRepository;
 import com.kian.yun.jpaexl.repository.helper.Dummy;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections4.IterableUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+
+import java.util.List;
 
 @Slf4j
 class SimpleJpaexlRepositoryTest {
@@ -48,5 +51,17 @@ class SimpleJpaexlRepositoryTest {
         log.info(dummy.toString());
 
         // then
+    }
+
+    @Test
+    public void findAll_test() {
+        // given
+
+        // when
+        List<Dummy> dummies = IterableUtils.toList(jpaexlRepository.findAll());
+
+        // then
+        log.info(dummies.size() + "");
+        log.info(dummies.get(0).toString());
     }
 }

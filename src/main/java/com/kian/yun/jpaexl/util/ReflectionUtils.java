@@ -1,12 +1,21 @@
 package com.kian.yun.jpaexl.util;
 
+import com.kian.yun.jpaexl.domain.Data;
+import com.kian.yun.jpaexl.domain.Tuple;
 import com.kian.yun.jpaexl.exception.JpaexlException;
+import lombok.extern.slf4j.Slf4j;
 
+import javax.swing.text.html.Option;
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 import static com.kian.yun.jpaexl.code.JpaexlCode.FAIL_TO_FIND_FIELD_MATCHED_ANNOTATION_TYPE;
 
+@Slf4j
 public class ReflectionUtils {
     public static Field getFieldByAnnotation(Class<?> annotationType, Field... fields) {
         Field target = Arrays.stream(fields)
@@ -26,7 +35,23 @@ public class ReflectionUtils {
         return entity.getClass().getSimpleName();
     }
 
-    public static String classType(String str) {
-        return str.split(" ")[1];
+    public static <T> Optional<T> createInstanceByTuple(Class<T> clazz, Tuple tuple) {
+        Class<?>[] schemaTypes = tuple.getValue().stream().map(d -> d.getSchema().getType()).collect(Collectors.toList()).toArray(new Class[]{});
+        Object[] values = tuple.getValue().stream().map(Data::getValue).collect(Collectors.toList()).toArray(new Object[]{});
+
+        try {
+            Constructor<T> constructor = clazz.getConstructor(schemaTypes);
+            T instance = constructor.newInstance(values);
+
+            return Optional.of(instance);
+
+        } catch (NoSuchMethodException
+                | InvocationTargetException
+                | InstantiationException
+                | IllegalAccessException e) {
+
+            e.printStackTrace();
+            return Optional.empty();
+        }
     }
 }
