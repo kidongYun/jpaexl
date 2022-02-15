@@ -44,7 +44,7 @@ public class SimpleJpaexlRepository<T, ID> implements JpaexlRepository<T, ID> {
 
             for(Field field : entity.getClass().getDeclaredFields()) {
                 field.setAccessible(true);
-                tuple.add(Data.of(field.getName(), Arrays.stream(field.getAnnotations()).collect(Collectors.toList()), field.get(entity)));
+                tuple.add(Data.of(field.getName(), field.get(entity)));
             }
 
             List<Schema<?>> schemas = tuple.getValue().stream().map(Data::getSchema).collect(Collectors.toList());

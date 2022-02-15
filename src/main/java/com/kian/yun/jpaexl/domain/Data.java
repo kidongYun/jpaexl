@@ -13,10 +13,9 @@ public class Data<T> {
     private final T value;
 
     @SuppressWarnings("unchecked")
-    public static <T> Data<T> of(String name, List<Annotation> annotations, T value) {
+    public static <T> Data<T> of(String name, T value) {
         Schema<T> schema = Schema.<T>builder()
                 .name(name)
-                .annotations(annotations)
                 .type((Class<T>) value.getClass())
                 .build();
 

@@ -101,12 +101,6 @@ public class SimpleTable implements Table {
 
         List<String> schemaTypes = schemas.stream().map(s -> s.getType().getName()).collect(Collectors.toList());
         insertRow(schemaTypes, Constants.CUR_ROW_SCHEMA_TYPE);
-
-        for(int i=0; i<schemas.size(); i++) {
-            for(int j=0; j<schemas.get(i).getAnnotations().size(); j++) {
-                insertValue(schemas.get(i).getAnnotations().get(j).annotationType().getName(), Constants.CUR_SCHEMA_ANN_START + j, Constants.CUR_CELL_INIT_VAL + i);
-            }
-        }
     }
 
 //    private int findRowCur(String value) {
@@ -139,17 +133,6 @@ public class SimpleTable implements Table {
 
         String schemaName = findValue(Cursor.of(Constants.CUR_ROW_SCHEMA_NAME, cursor.getCell()))
                 .orElseThrow(() -> JpaexlException.of(JpaexlCode.FAIL_TO_FIND_SCHEMA_NAME));
-
-        List<String> schemaAnnotations = new ArrayList<>();
-        for(int i=Constants.CUR_SCHEMA_ANN_START; i<Constants.CUR_SCHEMA_ANN_END; i++) {
-            Optional<String> valueOpt = findValue(Cursor.of(Constants.CUR_SCHEMA_ANN_START, cursor.getCell()));
-
-            if(valueOpt.isEmpty()) {
-                break;
-            }
-
-            schemaAnnotations.add(valueOpt.get());
-        }
 
         try {
             Schema<T> schema = Schema.of((Class<T>) Class.forName(schemaType), schemaName);
