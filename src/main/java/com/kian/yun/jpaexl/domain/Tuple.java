@@ -10,9 +10,9 @@ import java.util.List;
 @Builder
 public class Tuple<T> {
     private final Class<T> clazz;
-    private final List<Data<?>> value;
+    private final List<SimpleData<?>> value;
 
-    private Tuple(Class<T> clazz, List<Data<?>> tuple) {
+    private Tuple(Class<T> clazz, List<SimpleData<?>> tuple) {
         this.clazz = clazz;
         this.value = tuple;
     }
@@ -21,11 +21,11 @@ public class Tuple<T> {
         return new Tuple<>(null, new ArrayList<>());
     }
 
-    public static <T> Tuple<T> of(Class<T> clazz, List<Data<?>> tuple) {
+    public static <T> Tuple<T> of(Class<T> clazz, List<SimpleData<?>> tuple) {
         return new Tuple<>(clazz, tuple);
     }
 
-    public void add(Data<?> data) {
-        value.add(data);
+    public void add(SimpleData<?> simpleData) {
+        value.add(simpleData);
     }
 }

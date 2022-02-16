@@ -12,8 +12,6 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Repository;
 
 import java.lang.reflect.Field;
-import java.util.Arrays;
-import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
@@ -40,15 +38,14 @@ public class SimpleJpaexlRepository<T, ID> implements JpaexlRepository<T, ID> {
     @Override
     public <S extends T> S save(S entity) {
         try {
-            Tuple tuple = Tuple.empty();
+            Tuple<T> tuple = Tuple.empty();
 
             for(Field field : entity.getClass().getDeclaredFields()) {
                 field.setAccessible(true);
-                tuple.add(Data.of(field.getName(), field.get(entity)));
+                tuple.add(SimpleData.of(field.getName(), field.get(entity)));
             }
 
-            List<Schema<?>> schemas = tuple.getValue().stream().map(Data::getSchema).collect(Collectors.toList());
-            SimpleTable.createOrGetInstance(ReflectionUtils.className(clazz.getSimpleName()), schemas).insert(tuple);
+            SimpleTable.getInstance(clazz).insert(tuple);
 
         } catch (IllegalAccessException e) {
             e.printStackTrace();
@@ -64,7 +61,7 @@ public class SimpleJpaexlRepository<T, ID> implements JpaexlRepository<T, ID> {
 
     @Override
     public Optional<T> findById(ID id) {
-        Tuple tuple = SimpleTable.getInstance(clazz.getSimpleName()).findById(String.valueOf(id));
+        Tuple<T> tuple = SimpleTable.getInstance(clazz).findById(String.valueOf(id));
         return ReflectionUtils.createInstanceByTuple(clazz, tuple);
     }
 
@@ -75,7 +72,7 @@ public class SimpleJpaexlRepository<T, ID> implements JpaexlRepository<T, ID> {
 
     @Override
     public Iterable<T> findAll() {
-        Iterable<Tuple> tuples = SimpleTable.getInstance(ReflectionUtils.className(clazz.getSimpleName())).findAll();
+        Iterable<Tuple<T>> tuples = SimpleTable.getInstance(clazz).findAll();
 
         return StreamSupport.stream(tuples.spliterator(), false)
                 .map(t -> ReflectionUtils.createInstanceByTuple(clazz, t)

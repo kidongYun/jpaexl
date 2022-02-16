@@ -1,9 +1,11 @@
 package com.kian.yun.jpaexl.domain;
 
-public interface Table {
-    void insert(Tuple tuple);
+public interface Table<T> {
+    void insert(Tuple<T> tuple);
 
-    Tuple findById(String id);
+    Tuple<T> findById(String id);
 
-    Iterable<Tuple> findAll();
+    Iterable<Tuple<T>> findAll();
+
+    String getName();
 }

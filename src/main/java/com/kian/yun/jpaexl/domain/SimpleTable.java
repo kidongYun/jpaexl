@@ -6,13 +6,9 @@ import com.kian.yun.jpaexl.exception.JpaexlException;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 
-import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -22,59 +18,63 @@ import java.util.stream.IntStream;
 @Slf4j
 @Getter
 @Setter
-public class SimpleTable implements Table {
+public class SimpleTable<T> implements Table<T> {
     private final PersistenceManager persistenceManager;
-    private Sheet sheet;
+    private final Class<T> clazz;
+
+    private Integer cellSize;
+    private Integer rowSize;
     private Cursor cursor;
-    private int cellSize;
-    private int rowSize;
 
-    public static SimpleTable getInstance(String name) {
-        SimpleTable table = new SimpleTable();
-        table.setSheet(table.getPersistenceManager().getSheet(name));
-        table.setCellSize(table.findCellSize());
-        table.setRowSize(table.findRowSize());
+    public static <T> SimpleTable<T> getInstance(Class<T> clazz) {
+        SimpleTable<T> table = new SimpleTable<>(clazz);
+
+        boolean isExist = table.isExist();
+        log.info("'{}' table is exist ?... : {}", clazz.getName(), isExist);
+
+        table.setRowSize(isExist ? table.findRowSize() : 0);
+        table.setCellSize(isExist ? table.findCellSize() : clazz.getFields().length);
         table.setCursor(Cursor.of(table.getRowSize(), Constants.CUR_CELL_INIT_VAL));
 
         return table;
     }
 
-    public static SimpleTable createOrGetInstance(String name, List<Schema<?>> schemas) {
-        SimpleTable table = new SimpleTable();
-
-        boolean isNonExist = !table.getPersistenceManager().isExist(name);
-        table.setSheet((isNonExist) ? table.getPersistenceManager().createSheet(name) : table.getPersistenceManager().getSheet(name));
-        log.info("'{}' sheet is empty ?... : {}", name, isNonExist);
-
-        table.setCellSize(Constants.CUR_CELL_INIT_VAL + schemas.size() - 1);
-        table.setRowSize(table.findRowSize());
-        table.setCursor(Cursor.of(table.getRowSize(), Constants.CUR_CELL_INIT_VAL));
-
-        if(isNonExist) {
-            table.initTable(schemas);
-        }
-
-        return table;
-    }
-
-    private SimpleTable() {
+    private SimpleTable(Class<T> clazz) {
         this.persistenceManager = PersistenceManager.getInstance();
+        this.clazz = clazz;
     }
 
     @Override
-    public void insert(Tuple tuple) {
+    public void insert(Tuple<T> tuple) {
         insertTuple(tuple, cursor.shiftRow());
         persistenceManager.flush();
     }
 
     @Override
-    public Tuple findById(String id) {
+    public Tuple<T> findById(String id) {
         return Tuple.empty();
     }
 
     @Override
-    public Iterable<Tuple> findAll() {
+    public Iterable<Tuple<T>> findAll() {
         return findTuples(Cursor.row(Constants.CUR_ROW_INIT_VAL), Cursor.row(rowSize));
+    }
+
+    @Override
+    public String getName() {
+        return getClazz().getName();
+    }
+
+    private Sheet getSheet() {
+        return getPersistenceManager().getSheet(clazz.getName());
+    }
+
+    private Sheet createSheet() {
+        return getPersistenceManager().createSheet(clazz.getName());
+    }
+
+    private boolean isExist() {
+        return getPersistenceManager().isExist(clazz.getName());
     }
 
 //    public Tuple findById(String sheetName, String id) {
@@ -95,11 +95,11 @@ public class SimpleTable implements Table {
 //        return tuple;
 //    }
 
-    private void initTable(List<Schema<?>> schemas) {
-        List<String> schemaNames = schemas.stream().map(Schema::getName).collect(Collectors.toList());
+    private void initTable(List<SimpleSchema<?>> simpleSchemas) {
+        List<String> schemaNames = simpleSchemas.stream().map(SimpleSchema::getName).collect(Collectors.toList());
         insertRow(schemaNames, Constants.CUR_ROW_SCHEMA_NAME);
 
-        List<String> schemaTypes = schemas.stream().map(s -> s.getType().getName()).collect(Collectors.toList());
+        List<String> schemaTypes = simpleSchemas.stream().map(s -> s.getType().getName()).collect(Collectors.toList());
         insertRow(schemaTypes, Constants.CUR_ROW_SCHEMA_TYPE);
     }
 
@@ -126,28 +126,28 @@ public class SimpleTable implements Table {
 //        return Cursor.base();
 //    }
 
-    @SuppressWarnings("unchecked")
-    private <T> Optional<Schema<T>> findSchema(Cursor cursor) {
-        String schemaType = findValue(Cursor.of(Constants.CUR_ROW_SCHEMA_TYPE, cursor.getCell()))
-                .orElseThrow(() -> JpaexlException.of(JpaexlCode.FAIL_TO_FIND_SCHEMA_TYPE));
-
-        String schemaName = findValue(Cursor.of(Constants.CUR_ROW_SCHEMA_NAME, cursor.getCell()))
-                .orElseThrow(() -> JpaexlException.of(JpaexlCode.FAIL_TO_FIND_SCHEMA_NAME));
-
-        try {
-            Schema<T> schema = Schema.of((Class<T>) Class.forName(schemaType), schemaName);
-            return Optional.of(schema);
-
-        } catch (ClassNotFoundException | JpaexlException e) {
-            e.printStackTrace();
-            return Optional.empty();
-        }
-    }
+//    @SuppressWarnings("unchecked")
+//    private <T> Optional<SimpleSchema<T>> findSchema(Cursor cursor) {
+//        String schemaType = findValue(Cursor.of(Constants.CUR_ROW_SCHEMA_TYPE, cursor.getCell()))
+//                .orElseThrow(() -> JpaexlException.of(JpaexlCode.FAIL_TO_FIND_SCHEMA_TYPE));
+//
+//        String schemaName = findValue(Cursor.of(Constants.CUR_ROW_SCHEMA_NAME, cursor.getCell()))
+//                .orElseThrow(() -> JpaexlException.of(JpaexlCode.FAIL_TO_FIND_SCHEMA_NAME));
+//
+//        try {
+//            SimpleSchema<T> simpleSchema = SimpleSchema.of((Class<T>) Class.forName(schemaType), schemaName);
+//            return Optional.of(simpleSchema);
+//
+//        } catch (ClassNotFoundException | JpaexlException e) {
+//            e.printStackTrace();
+//            return Optional.empty();
+//        }
+//    }
 
     private int findCellSize() {
         int size = 0;
         for(int i=Constants.CUR_CELL_INIT_VAL; i<Constants.CUR_CELL_MAX_VAL; i++) {
-            Optional<String> valueOpt = findValue(Cursor.of(Constants.CUR_ROW_SCHEMA_NAME, i));
+            Optional<String> valueOpt = getPersistenceManager().findValue(clazz.getName(), Cursor.of(Constants.CUR_ROW_SCHEMA_NAME, i));
 
             if(valueOpt.isEmpty()) {
                 break;
@@ -161,7 +161,7 @@ public class SimpleTable implements Table {
 
     private int findRowSize() {
         for(int i=Constants.CUR_ROW_INIT_VAL; i<Constants.CUR_ROW_MAX_VAL; i++) {
-            Optional<String> valueOpt = findValue(Cursor.of(i, Constants.CUR_CELL_INIT_VAL));
+            Optional<String> valueOpt = getPersistenceManager().findValue(clazz.getName(), Cursor.of(i, Constants.CUR_CELL_INIT_VAL));
 
             if(valueOpt.isPresent()) {
                 continue;
@@ -173,58 +173,18 @@ public class SimpleTable implements Table {
         return 0;
     }
 
-    private List<Tuple> findTuples(Cursor from, Cursor to) {
+    private List<Tuple<T>> findTuples(Cursor from, Cursor to) {
         return IntStream.range(from.getRow(), to.getRow())
                 .mapToObj(i -> findTuple(Cursor.row(i)).orElseThrow(() -> new JpaexlException(JpaexlCode.FAIL_TO_FIND_TUPLE)))
                 .collect(Collectors.toList());
     }
 
-    private Optional<Tuple> findTuple(Cursor cursor) {
-        List<Data<?>> data = IntStream.range(Constants.CUR_CELL_INIT_VAL, Constants.CUR_CELL_INIT_VAL + cellSize)
+    private Optional<Tuple<T>> findTuple(Cursor cursor) {
+        List<SimpleData<?>> data = IntStream.range(Constants.CUR_CELL_INIT_VAL, Constants.CUR_CELL_INIT_VAL + cellSize)
                 .mapToObj(i -> findData(Cursor.of(cursor.getRow(), i)).orElseThrow(() -> new JpaexlException(JpaexlCode.FAIL_TO_FIND_DATA)))
                 .collect(Collectors.toList());
 
-        return Optional.of(Tuple.of(data));
-    }
-
-    @SuppressWarnings("unchecked")
-    private <T> Optional<Data<T>> findData(Cursor cursor) {
-        Schema<T> schema = (Schema<T>) findSchema(cursor).orElseThrow(() -> JpaexlException.of(JpaexlCode.FAIL_TO_FIND_SCHEMA));
-
-        String value = findValue(Cursor.of(cursor.getRow(), cursor.getCell()))
-                .orElseThrow(() -> JpaexlException.of(JpaexlCode.FAIL_TO_FIND_VALUE));
-
-        try {
-            Constructor<T> constructor = schema.getType().getConstructor(String.class);
-            T instance = constructor.newInstance(value);
-           return Optional.of(Data.of(schema, instance));
-
-        } catch (NoSuchMethodException
-                | InvocationTargetException
-                | InstantiationException
-                | IllegalAccessException e) {
-            e.printStackTrace();
-            return Optional.empty();
-
-        } catch (JpaexlException e) {
-            return Optional.empty();
-        }
-    }
-
-    private Optional<String> findValue(Cursor cursor) {
-        Row row = sheet.getRow(cursor.getRow());
-
-        if(Objects.isNull(row)) {
-            return Optional.empty();
-        }
-
-        Cell cell = row.getCell(cursor.getCell());
-
-        if(Objects.isNull(cell)) {
-            return Optional.empty();
-        }
-
-        return Optional.of(cell.getStringCellValue());
+        return Optional.of(Tuple.of(clazz, data));
     }
 
     private void insertTuple(Tuple tuple, int rowCur) {

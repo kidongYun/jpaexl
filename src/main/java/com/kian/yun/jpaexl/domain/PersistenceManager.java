@@ -2,6 +2,8 @@ package com.kian.yun.jpaexl.domain;
 
 import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.EmptyFileException;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
@@ -11,6 +13,7 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Objects;
+import java.util.Optional;
 
 @Slf4j
 public class PersistenceManager {
@@ -41,6 +44,22 @@ public class PersistenceManager {
         }
 
         return singleton;
+    }
+
+    public Optional<String> findValue(String tableName, Cursor cursor) {
+        Row row = getSheet(tableName).getRow(cursor.getRow());
+
+        if(Objects.isNull(row)) {
+            return Optional.empty();
+        }
+
+        Cell cell = row.getCell(cursor.getCell());
+
+        if(Objects.isNull(cell)) {
+            return Optional.empty();
+        }
+
+        return Optional.of(cell.getStringCellValue());
     }
 
     public void flush() {

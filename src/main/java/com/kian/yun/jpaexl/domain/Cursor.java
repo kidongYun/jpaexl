@@ -9,8 +9,8 @@ import lombok.Setter;
 @Setter
 @Builder
 public class Cursor {
-    private int row;
-    private int cell;
+    private Integer row;
+    private Integer cell;
 
     public static Cursor base() {
         return Cursor.builder().row(0).cell(0).build();
