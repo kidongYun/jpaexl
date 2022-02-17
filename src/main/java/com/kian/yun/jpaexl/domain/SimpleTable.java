@@ -19,7 +19,7 @@ import java.util.stream.IntStream;
 @Getter
 @Setter
 public class SimpleTable<T> implements Table<T> {
-    private final PersistenceManager persistenceManager;
+    private final SimplePersistenceManager simplePersistenceManager;
     private final Class<T> clazz;
 
     private Integer cellSize;
@@ -40,14 +40,14 @@ public class SimpleTable<T> implements Table<T> {
     }
 
     private SimpleTable(Class<T> clazz) {
-        this.persistenceManager = PersistenceManager.getInstance();
+        this.simplePersistenceManager = SimplePersistenceManager.getInstance();
         this.clazz = clazz;
     }
 
     @Override
     public void insert(Tuple<T> tuple) {
         insertTuple(tuple, cursor.shiftRow());
-        persistenceManager.flush();
+        simplePersistenceManager.flush();
     }
 
     @Override
@@ -66,15 +66,15 @@ public class SimpleTable<T> implements Table<T> {
     }
 
     private Sheet getSheet() {
-        return getPersistenceManager().getSheet(clazz.getName());
+        return getSimplePersistenceManager().getSheet(clazz.getName());
     }
 
     private Sheet createSheet() {
-        return getPersistenceManager().createSheet(clazz.getName());
+        return getSimplePersistenceManager().createSheet(clazz.getName());
     }
 
     private boolean isExist() {
-        return getPersistenceManager().isExist(clazz.getName());
+        return getSimplePersistenceManager().isExist(clazz.getName());
     }
 
 //    public Tuple findById(String sheetName, String id) {
@@ -147,7 +147,7 @@ public class SimpleTable<T> implements Table<T> {
     private int findCellSize() {
         int size = 0;
         for(int i=Constants.CUR_CELL_INIT_VAL; i<Constants.CUR_CELL_MAX_VAL; i++) {
-            Optional<String> valueOpt = getPersistenceManager().findValue(clazz.getName(), Cursor.of(Constants.CUR_ROW_SCHEMA_NAME, i));
+            Optional<String> valueOpt = getSimplePersistenceManager().findValue(clazz.getName(), Cursor.of(Constants.CUR_ROW_SCHEMA_NAME, i));
 
             if(valueOpt.isEmpty()) {
                 break;
@@ -161,7 +161,7 @@ public class SimpleTable<T> implements Table<T> {
 
     private int findRowSize() {
         for(int i=Constants.CUR_ROW_INIT_VAL; i<Constants.CUR_ROW_MAX_VAL; i++) {
-            Optional<String> valueOpt = getPersistenceManager().findValue(clazz.getName(), Cursor.of(i, Constants.CUR_CELL_INIT_VAL));
+            Optional<String> valueOpt = getSimplePersistenceManager().findValue(clazz.getName(), Cursor.of(i, Constants.CUR_CELL_INIT_VAL));
 
             if(valueOpt.isPresent()) {
                 continue;
