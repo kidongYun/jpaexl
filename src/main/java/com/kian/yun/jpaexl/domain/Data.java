@@ -1,31 +1,11 @@
 package com.kian.yun.jpaexl.domain;
 
-import lombok.Builder;
-import lombok.Getter;
+public interface Data<T> {
+    Iterable<SimpleSchema<T>> getSchemas();
 
-import java.lang.annotation.Annotation;
-import java.util.List;
+    SimpleSchema<T> getSchemaByName(String name);
 
-@Getter
-@Builder
-public class Data<T> {
-    private final Schema<T> schema;
-    private final T value;
+    Iterable<String> getValues();
 
-    @SuppressWarnings("unchecked")
-    public static <T> Data<T> of(String name, T value) {
-        Schema<T> schema = Schema.<T>builder()
-                .name(name)
-                .type((Class<T>) value.getClass())
-                .build();
-
-        return Data.<T>builder()
-                .schema(schema)
-                .value(value)
-                .build();
-    }
-
-    public static <T> Data<T> of(Schema<T> schema, T value) {
-        return new Data<>(schema, value);
-    }
+    String getValueBySchemaName(String schemaName);
 }

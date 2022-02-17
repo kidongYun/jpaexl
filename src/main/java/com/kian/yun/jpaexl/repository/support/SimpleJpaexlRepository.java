@@ -1,9 +1,8 @@
 package com.kian.yun.jpaexl.repository.support;
 
-import com.kian.yun.jpaexl.code.JpaexlCode;
 import com.kian.yun.jpaexl.domain.*;
-import com.kian.yun.jpaexl.exception.JpaexlException;
 import com.kian.yun.jpaexl.repository.JpaexlRepository;
+import com.kian.yun.jpaexl.util.ExceptionUtils;
 import com.kian.yun.jpaexl.util.ReflectionUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -11,12 +10,13 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Repository;
 
+import java.lang.reflect.Array;
 import java.lang.reflect.Field;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
-import java.util.stream.StreamSupport;
 
 @Slf4j
 @Repository
@@ -28,27 +28,22 @@ public class SimpleJpaexlRepository<T, ID> implements JpaexlRepository<T, ID> {
     }
 
     @Override
-    public Iterable<T> findAll(Sort sort) {
-        return null;
-    }
-
-    @Override
-    public Page<T> findAll(Pageable pageable) {
-        return null;
-    }
-
-    @Override
     public <S extends T> S save(S entity) {
-        try {
-            Tuple tuple = Tuple.empty();
 
-            for(Field field : entity.getClass().getDeclaredFields()) {
-                field.setAccessible(true);
-                tuple.add(Data.of(field.getName(), field.get(entity)));
-            }
+        Arrays.stream(entity.getClass().getDeclaredFields()).forEach(f -> f.setAccessible(true));
+
+        List<Data<?>> data = Arrays.stream(entity.getClass().getDeclaredFields())
+                .map(f -> ExceptionUtils.wrap(() -> SimpleData.of(f.getName(), f.get(entity))))
+                .collect(Collectors.toList());
+
+        Tuple<T> tuple = SimpleTuple.of(clazz, data);
+
+        try {
 
             List<Schema<?>> schemas = tuple.getValue().stream().map(Data::getSchema).collect(Collectors.toList());
             SimpleTable.createOrGetInstance(ReflectionUtils.className(clazz.getSimpleName()), schemas).insert(tuple);
+
+            SimpleTable.getInstance(clazz)
 
         } catch (IllegalAccessException e) {
             e.printStackTrace();
@@ -64,8 +59,7 @@ public class SimpleJpaexlRepository<T, ID> implements JpaexlRepository<T, ID> {
 
     @Override
     public Optional<T> findById(ID id) {
-        Tuple tuple = SimpleTable.getInstance(clazz.getSimpleName()).findById(String.valueOf(id));
-        return ReflectionUtils.createInstanceByTuple(clazz, tuple);
+        return Optional.empty();
     }
 
     @Override
@@ -75,12 +69,7 @@ public class SimpleJpaexlRepository<T, ID> implements JpaexlRepository<T, ID> {
 
     @Override
     public Iterable<T> findAll() {
-        Iterable<Tuple> tuples = SimpleTable.getInstance(ReflectionUtils.className(clazz.getSimpleName())).findAll();
-
-        return StreamSupport.stream(tuples.spliterator(), false)
-                .map(t -> ReflectionUtils.createInstanceByTuple(clazz, t)
-                        .orElseThrow(() -> new JpaexlException(JpaexlCode.FAIL_TO_CREATE_INSTANCE_BY_TUPLE)))
-                .collect(Collectors.toList());
+        return null;
     }
 
     @Override
@@ -116,5 +105,15 @@ public class SimpleJpaexlRepository<T, ID> implements JpaexlRepository<T, ID> {
     @Override
     public void deleteAll() {
 
+    }
+
+    @Override
+    public Iterable<T> findAll(Sort sort) {
+        return null;
+    }
+
+    @Override
+    public Page<T> findAll(Pageable pageable) {
+        return null;
     }
 }

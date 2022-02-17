@@ -1,11 +1,10 @@
 package com.kian.yun.jpaexl.util;
 
-import com.kian.yun.jpaexl.domain.Data;
-import com.kian.yun.jpaexl.domain.Tuple;
+import com.kian.yun.jpaexl.domain.SimpleData;
+import com.kian.yun.jpaexl.domain.SimpleTuple;
 import com.kian.yun.jpaexl.exception.JpaexlException;
 import lombok.extern.slf4j.Slf4j;
 
-import javax.swing.text.html.Option;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
@@ -25,33 +24,5 @@ public class ReflectionUtils {
         target.setAccessible(true);
 
         return target;
-    }
-
-    public static int countFields(Field... fields) {
-        return fields.length;
-    }
-
-    public static String className(Object entity) {
-        return entity.getClass().getSimpleName();
-    }
-
-    public static <T> Optional<T> createInstanceByTuple(Class<T> clazz, Tuple tuple) {
-        Class<?>[] schemaTypes = tuple.getValue().stream().map(d -> d.getSchema().getType()).collect(Collectors.toList()).toArray(new Class[]{});
-        Object[] values = tuple.getValue().stream().map(Data::getValue).collect(Collectors.toList()).toArray(new Object[]{});
-
-        try {
-            Constructor<T> constructor = clazz.getConstructor(schemaTypes);
-            T instance = constructor.newInstance(values);
-
-            return Optional.of(instance);
-
-        } catch (NoSuchMethodException
-                | InvocationTargetException
-                | InstantiationException
-                | IllegalAccessException e) {
-
-            e.printStackTrace();
-            return Optional.empty();
-        }
     }
 }
