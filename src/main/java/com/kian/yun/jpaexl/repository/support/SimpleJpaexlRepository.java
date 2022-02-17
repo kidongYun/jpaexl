@@ -38,7 +38,7 @@ public class SimpleJpaexlRepository<T, ID> implements JpaexlRepository<T, ID> {
     @Override
     public <S extends T> S save(S entity) {
         try {
-            Tuple<T> tuple = Tuple.empty();
+            Tuple<T> tuple = SimpleTuple.empty();
 
             for(Field field : entity.getClass().getDeclaredFields()) {
                 field.setAccessible(true);
@@ -61,8 +61,8 @@ public class SimpleJpaexlRepository<T, ID> implements JpaexlRepository<T, ID> {
 
     @Override
     public Optional<T> findById(ID id) {
-        Tuple<T> tuple = SimpleTable.getInstance(clazz).findById(String.valueOf(id));
-        return ReflectionUtils.createInstanceByTuple(clazz, tuple);
+        Tuple<T> simpleTuple = SimpleTable.getInstance(clazz).findById(String.valueOf(id));
+        return ReflectionUtils.createInstanceByTuple(clazz, simpleTuple);
     }
 
     @Override

@@ -64,6 +64,19 @@ public class SimplePersistenceManager implements PersistenceManager {
     }
 
     @Override
+    public void insertValue(String tableName, Cursor cursor, String value) {
+        Row row = getSheet(tableName).getRow(cursor.getRow());
+
+        if(Objects.isNull(row)) {
+            row = getSheet(tableName).createRow(cursor.getRow());
+        }
+
+        row.createCell(cursor.getCell()).setCellValue(value);
+
+        log.info("Inserted '{}' into row : '{}', cell : '{}' at excel...", value, cursor.getRow(), cursor.getCell());
+    }
+
+    @Override
     public void flush() {
         try {
             FileOutputStream fos = new FileOutputStream("./jpaexl.xlsx");

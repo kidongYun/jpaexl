@@ -1,31 +1,13 @@
 package com.kian.yun.jpaexl.domain;
 
-import lombok.Builder;
-import lombok.Getter;
+import java.util.Optional;
 
-import java.util.ArrayList;
-import java.util.List;
+public interface Tuple<T> {
+    Optional<Tuple<T>> findById(Table<T> table, String id);
 
-@Getter
-@Builder
-public class Tuple<T> {
-    private final Class<T> clazz;
-    private final List<SimpleData<?>> value;
+    Iterable<Tuple<T>> findAll(Table<T> table);
 
-    private Tuple(Class<T> clazz, List<SimpleData<?>> tuple) {
-        this.clazz = clazz;
-        this.value = tuple;
-    }
+    void insert(Table<T> table);
 
-    public static <T> Tuple<T> empty() {
-        return new Tuple<>(null, new ArrayList<>());
-    }
-
-    public static <T> Tuple<T> of(Class<T> clazz, List<SimpleData<?>> tuple) {
-        return new Tuple<>(clazz, tuple);
-    }
-
-    public void add(SimpleData<?> simpleData) {
-        value.add(simpleData);
-    }
+    void add(Data<?> data);
 }

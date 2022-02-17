@@ -7,6 +7,8 @@ import java.util.Optional;
 public interface PersistenceManager {
     Optional<String> findValue(String tableName, Cursor cursor);
 
+    void insertValue(String tableName, Cursor cursor, String value);
+
     void flush();
 
     Sheet getSheet(String tableName);

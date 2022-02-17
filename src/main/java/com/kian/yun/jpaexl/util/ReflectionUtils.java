@@ -1,7 +1,7 @@
 package com.kian.yun.jpaexl.util;
 
 import com.kian.yun.jpaexl.domain.SimpleData;
-import com.kian.yun.jpaexl.domain.Tuple;
+import com.kian.yun.jpaexl.domain.SimpleTuple;
 import com.kian.yun.jpaexl.exception.JpaexlException;
 import lombok.extern.slf4j.Slf4j;
 
@@ -34,12 +34,12 @@ public class ReflectionUtils {
         return entity.getClass().getSimpleName();
     }
 
-    public static <T> Optional<T> createInstanceByTuple(Class<T> clazz, Tuple tuple) {
-        Class<?>[] schemaTypes = tuple.getValue().stream().map(d -> d.getSchema().getType()).collect(Collectors.toList()).toArray(new Class[]{});
-        Object[] values = tuple.getValue().stream().map(SimpleData::getValue).collect(Collectors.toList()).toArray(new Object[]{});
+    public static <T> Optional<T> createInstanceByTuple(SimpleTuple<T> simpleTuple) {
+        Class<?>[] schemaTypes = simpleTuple.getValue().stream().map(d -> d.getSchema().getType()).collect(Collectors.toList()).toArray(new Class[]{});
+        Object[] values = simpleTuple.getValue().stream().map(SimpleData::getValue).collect(Collectors.toList()).toArray(new Object[]{});
 
         try {
-            Constructor<T> constructor = clazz.getConstructor(schemaTypes);
+            Constructor<T> constructor = simpleTuple.getClazz().getConstructor(schemaTypes);
             T instance = constructor.newInstance(values);
 
             return Optional.of(instance);

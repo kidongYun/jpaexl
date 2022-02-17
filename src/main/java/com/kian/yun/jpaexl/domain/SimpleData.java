@@ -12,7 +12,7 @@ import java.util.Optional;
 public class SimpleData<D> implements Data<D> {
     private final PersistenceManager persistenceManager;
     private final Schema<D> schema;
-    private final D value;
+    private final String value;
 
     @SuppressWarnings("unchecked")
     public static <D> Data<D> of(String name, D value) {
@@ -24,19 +24,22 @@ public class SimpleData<D> implements Data<D> {
         return SimpleData.<D>builder()
                 .persistenceManager(SimplePersistenceManager.getInstance())
                 .schema(schema)
-                .value(value)
+                .value(String.valueOf(value))
                 .build();
     }
 
-    public static <D> Data<D> of(Schema<D> simpleSchema, D value) {
+    public static <D> Data<D> of(Schema<D> simpleSchema, String value) {
         return new SimpleData<>(SimplePersistenceManager.getInstance(), simpleSchema, value);
     }
 
     @Override
-    public <T> Optional<Data<D>> findByName(Table<T> table, String schemaName, String id) {
-        return Optional.of(SimpleData.of(
-                schema.findByName(table, schemaName).orElseThrow(() -> JpaexlException.of(JpaexlCode.FAIL_TO_FIND_SCHEMA)),
-                findValue(table, schemaName, id)));
+    public <T> Optional<Data<D>> findByNameAndId(Table<T> table, String schemaName, String id) {
+        Schema<D> foundScheme = schema.findByName(table, schemaName)
+                .orElseThrow(() -> JpaexlException.of(JpaexlCode.FAIL_TO_FIND_SCHEMA));
+
+        String foundValue = findValue(table, schemaName, id);
+
+        return Optional.of(SimpleData.of(foundScheme, foundValue));
     }
 
     @Override
@@ -46,30 +49,17 @@ public class SimpleData<D> implements Data<D> {
     }
 
     @Override
-    public <T> D findValue(Table<T> table, String schemaName, String id) {
-        String value = persistenceManager.findValue(table.getName(), findCursor())
+    public <T> String findValue(Table<T> table, String schemaName, String id) {
+        return persistenceManager.findValue(table.getName(), findCursor(table, schemaName, id))
                 .orElseThrow(() -> JpaexlException.of(JpaexlCode.FAIL_TO_FIND_VALUE));
-
-        try {
-            Constructor<D> constructor = schema1.getType().getConstructor(String.class);
-            D instance = constructor.newInstance(value);
-            return Optional.of(SimpleData.of(schema1, instance));
-
-        } catch (NoSuchMethodException
-                | InvocationTargetException
-                | InstantiationException
-                | IllegalAccessException e) {
-            e.printStackTrace();
-            return Optional.empty();
-
-        } catch (JpaexlException e) {
-            return Optional.empty();
-        }
-
-        return null;
     }
 
-    private Cursor findCursor() {
+    @Override
+    public <T> void insert(Table<T> table) {
+
+    }
+
+    private <T> Cursor findCursor(Table<T> table, String schemaName, String id) {
         return Cursor.base();
     }
 }

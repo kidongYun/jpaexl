@@ -45,22 +45,6 @@ public class SimpleTable<T> implements Table<T> {
     }
 
     @Override
-    public void insert(Tuple<T> tuple) {
-        insertTuple(tuple, cursor.shiftRow());
-        simplePersistenceManager.flush();
-    }
-
-    @Override
-    public Tuple<T> findById(String id) {
-        return Tuple.empty();
-    }
-
-    @Override
-    public Iterable<Tuple<T>> findAll() {
-        return findTuples(Cursor.row(Constants.CUR_ROW_INIT_VAL), Cursor.row(rowSize));
-    }
-
-    @Override
     public String getName() {
         return getClazz().getName();
     }
@@ -173,39 +157,19 @@ public class SimpleTable<T> implements Table<T> {
         return 0;
     }
 
-    private List<Tuple<T>> findTuples(Cursor from, Cursor to) {
+    private List<SimpleTuple<T>> findTuples(Cursor from, Cursor to) {
         return IntStream.range(from.getRow(), to.getRow())
                 .mapToObj(i -> findTuple(Cursor.row(i)).orElseThrow(() -> new JpaexlException(JpaexlCode.FAIL_TO_FIND_TUPLE)))
                 .collect(Collectors.toList());
     }
 
-    private Optional<Tuple<T>> findTuple(Cursor cursor) {
-        List<SimpleData<?>> data = IntStream.range(Constants.CUR_CELL_INIT_VAL, Constants.CUR_CELL_INIT_VAL + cellSize)
-                .mapToObj(i -> findData(Cursor.of(cursor.getRow(), i)).orElseThrow(() -> new JpaexlException(JpaexlCode.FAIL_TO_FIND_DATA)))
-                .collect(Collectors.toList());
-
-        return Optional.of(Tuple.of(clazz, data));
-    }
-
-    private void insertTuple(Tuple tuple, int rowCur) {
-        insertRow(tuple.getValue().stream().map(d -> String.valueOf(d.getValue())).collect(Collectors.toList()), rowCur);
+    private void insertTuple(SimpleTuple simpleTuple, int rowCur) {
+        insertRow(simpleTuple.getValue().stream().map(d -> String.valueOf(d.getValue())).collect(Collectors.toList()), rowCur);
     }
 
     private void insertRow(List<String> values, int rowCur) {
         for(String value : values) {
             insertValue(value, rowCur, cursor.shiftCell(cellSize));
         }
-    }
-
-    private void insertValue(String value, int rowCur, int cellCur) {
-        Row row = sheet.getRow(rowCur);
-
-        if(Objects.isNull(row)) {
-            row = sheet.createRow(rowCur);
-        }
-
-        row.createCell(cellCur).setCellValue(value);
-
-        log.info("Inserted '{}' into row : '{}', cell : '{}' at excel...", value, rowCur, cellCur);
     }
 }

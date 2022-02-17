@@ -7,7 +7,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Optional;
 
-@Getter
 @Builder
 public class SimpleSchema<S> implements Schema<S> {
     public static final int CUR_ROW_SCHEMA_NAME = 1;
@@ -48,5 +47,15 @@ public class SimpleSchema<S> implements Schema<S> {
     @Override
     public <T> Optional<Schema<S>> findByName(Table<T> table, String name) {
         return Optional.empty();
+    }
+
+    @Override
+    public Class<S> getType() {
+        return null;
+    }
+
+    @Override
+    public String getName() {
+        return null;
     }
 }
