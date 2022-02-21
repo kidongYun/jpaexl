@@ -68,11 +68,16 @@ public class SimplePersistenceManager implements PersistenceManager {
     @Override
     public void insert(String tableName, Cursor cursor, String value) {
         Sheet sheet = workbook.getSheet(tableName);
+        log.info(workbook.hashCode() + "");
         log.info(String.valueOf(sheet));
+        log.info(workbook.getNumberOfSheets() + "");
 
         if(Objects.isNull(sheet)) {
-            log.info("!!!!!!");
+            log.info("tableName : " + tableName);
             sheet = workbook.createSheet(tableName);
+            Sheet test = workbook.getSheet(tableName);
+
+            log.info("test - " + test);
         }
 
         Row row = sheet.getRow(cursor.getRow());

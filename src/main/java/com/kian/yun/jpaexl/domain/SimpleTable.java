@@ -52,7 +52,7 @@ public class SimpleTable<T> implements Table<T> {
         List<String> values = tuple.getData().stream().map(Data::getValue).collect(Collectors.toList());
 
         for(String value : values) {
-            persistenceManager.insert(clazz.getName(), cursor.shiftCell(cellSize), value);
+            persistenceManager.insert(clazz.getSimpleName(), cursor.shiftCell(cellSize), value);
         }
 
         persistenceManager.flush();
