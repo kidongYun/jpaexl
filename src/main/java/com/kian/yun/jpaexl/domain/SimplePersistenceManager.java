@@ -2,6 +2,7 @@ package com.kian.yun.jpaexl.domain;
 
 import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.EmptyFileException;
+import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
@@ -62,22 +63,37 @@ public class SimplePersistenceManager implements PersistenceManager {
 
     @Override
     public Optional<String> find(String tableName, Cursor cursor) {
-        return Optional.empty();
+        Sheet sheet = getSheet(tableName);
+
+        if(Objects.isNull(sheet)) {
+            return Optional.empty();
+        }
+
+        Row row = sheet.getRow(cursor.getRow());
+
+        if(Objects.isNull(row)) {
+            return Optional.empty();
+        }
+
+        Cell cell = row.getCell(cursor.getCell());
+
+        if(Objects.isNull(cell)) {
+            return Optional.empty();
+        }
+
+        String value = cell.getStringCellValue();
+        log.info("found '{}' from row : '{}', cell : '{}' at table named '{}'", value, cursor.getRow(), cursor.getCell(), tableName);
+
+
+        return Optional.of(value);
     }
 
     @Override
     public void insert(String tableName, Cursor cursor, String value) {
         Sheet sheet = workbook.getSheet(tableName);
-        log.info(workbook.hashCode() + "");
-        log.info(String.valueOf(sheet));
-        log.info(workbook.getNumberOfSheets() + "");
 
         if(Objects.isNull(sheet)) {
-            log.info("tableName : " + tableName);
             sheet = workbook.createSheet(tableName);
-            Sheet test = workbook.getSheet(tableName);
-
-            log.info("test - " + test);
         }
 
         Row row = sheet.getRow(cursor.getRow());

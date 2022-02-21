@@ -1,37 +1,39 @@
 package com.kian.yun.jpaexl.domain;
 
-import com.kian.yun.jpaexl.code.Constants;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
+import lombok.extern.slf4j.Slf4j;
 
-@Getter
-@Setter
+@Slf4j
+@Getter(AccessLevel.PACKAGE)
+@Setter(AccessLevel.PRIVATE)
 @Builder
+@ToString
 public class Cursor {
-    private int row;
+    public static final int ROW_SCHEMA_NAME = 1;
+    public static final int ROW_SCHEMA_TYPE = 2;
+    public static final int ROW_INIT_VAL = 3;
+    public static final int CELL_INIT_VAL = 0;
+
+    public static final int ROW_MAX_VAL = 9999;
+    public static final int CELL_MAX_VAL = 9999;
+
+    private final int row;
     private int cell;
-
-    public static Cursor base() {
-        return Cursor.builder().row(0).cell(0).build();
-    }
-
-    public static Cursor row(int row) {
-        return Cursor.builder().row(row).build();
-    }
 
     public static Cursor of(int row, int cell) {
         return Cursor.builder().row(row).cell(cell).build();
     }
 
-    public Cursor shiftRow() {
-        row++;
-        return this;
+    public static Cursor of(int row) {
+        return Cursor.builder().row(row).cell(CELL_INIT_VAL).build();
     }
 
-    public Cursor shiftCell(int cellSize) {
+    public Cursor shift(int cellSize) {
+        log.info("cell : {}", cell);
+        log.info("cellSize : {}", cellSize);
+
         if(cell >= cellSize) {
-            setCell(Constants.CUR_CELL_INIT_VAL);
+            setCell(Cursor.CELL_INIT_VAL);
         } else {
             cell++;
         }

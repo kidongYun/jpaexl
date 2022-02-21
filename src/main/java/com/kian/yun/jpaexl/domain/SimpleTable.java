@@ -1,11 +1,12 @@
 package com.kian.yun.jpaexl.domain;
 
-import com.kian.yun.jpaexl.code.Constants;
+import com.kian.yun.jpaexl.util.ReflectionUtils;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -18,19 +19,22 @@ public class SimpleTable<T> implements Table<T> {
     private final Class<T> clazz;
 
     private Integer cellSize;
-    private Integer rowSize;
-    private Cursor cursor;
 
     private SimpleTable(Class<T> clazz) {
         this.persistenceManager = SimplePersistenceManager.getInstance();
         this.clazz = clazz;
 
-        boolean isExist = persistenceManager.isExist(clazz.getName());
-        log.info("'{}' table is exist ?... : {}", clazz.getName(), isExist);
+        boolean isExist = persistenceManager.isExist(clazz.getSimpleName());
 
-        setRowSize(isExist ? findRowSize() : 0);
-        setCellSize(isExist ? findCellSize() : clazz.getFields().length);
-        setCursor(Cursor.of(getRowSize(), Constants.CUR_CELL_INIT_VAL));
+        setCellSize(isExist ? findCellSize() : clazz.getDeclaredFields().length);
+
+        if(!isExist) {
+            List<Schema<?>> schemas = Arrays.stream(clazz.getDeclaredFields())
+                    .map(ReflectionUtils::getSchemaByField)
+                    .collect(Collectors.toList());
+
+            initTable(schemas);
+        }
     }
 
     public static <T> Table<T> getInstance(Class<T> clazz) {
@@ -50,18 +54,30 @@ public class SimpleTable<T> implements Table<T> {
     @Override
     public void save(Tuple<T> tuple) {
         List<String> values = tuple.getData().stream().map(Data::getValue).collect(Collectors.toList());
-
-        for(String value : values) {
-            persistenceManager.insert(clazz.getSimpleName(), cursor.shiftCell(cellSize), value);
-        }
+        insertRow(values, Cursor.of(findRowSize(), Cursor.CELL_INIT_VAL));
 
         persistenceManager.flush();
     }
 
-    private int findCellSize() {
+    private void initTable(List<Schema<?>> schemas) {
+        List<String> schemaNames = schemas.stream().map(Schema::getName).collect(Collectors.toList());
+        insertRow(schemaNames, Cursor.of(Cursor.ROW_SCHEMA_NAME, Cursor.CELL_INIT_VAL));
+
+        List<String> schemaTypes = schemas.stream().map(s -> s.getType().getName()).collect(Collectors.toList());
+        insertRow(schemaTypes, Cursor.of(Cursor.ROW_SCHEMA_TYPE, Cursor.CELL_INIT_VAL));
+    }
+
+    private void insertRow(List<String> values, Cursor cursor) {
+        for(String value : values) {
+            persistenceManager.insert(clazz.getSimpleName(), cursor.shift(cellSize), value);
+        }
+    }
+
+    private Integer findCellSize() {
         int size = 0;
-        for(int i=Constants.CUR_CELL_INIT_VAL; i<Constants.CUR_CELL_MAX_VAL; i++) {
-            Optional<String> valueOpt = getPersistenceManager().find(clazz.getName(), Cursor.of(Constants.CUR_ROW_SCHEMA_NAME, i));
+
+        for(int i=Cursor.of(Cursor.ROW_SCHEMA_NAME).shift(cellSize).getCell(); i<Cursor.CELL_MAX_VAL; i++) {
+            Optional<String> valueOpt = getPersistenceManager().find(clazz.getSimpleName(), Cursor.of(Cursor.ROW_SCHEMA_NAME, i));
 
             if(valueOpt.isEmpty()) {
                 break;
@@ -73,9 +89,9 @@ public class SimpleTable<T> implements Table<T> {
         return size;
     }
 
-    private int findRowSize() {
-        for(int i=Constants.CUR_ROW_INIT_VAL; i<Constants.CUR_ROW_MAX_VAL; i++) {
-            Optional<String> valueOpt = getPersistenceManager().find(clazz.getName(), Cursor.of(i, Constants.CUR_CELL_INIT_VAL));
+    private Integer findRowSize() {
+        for(int i=Cursor.ROW_INIT_VAL; i<Cursor.ROW_MAX_VAL; i++) {
+            Optional<String> valueOpt = getPersistenceManager().find(clazz.getSimpleName(), Cursor.of(i).shift(cellSize));
 
             if(valueOpt.isPresent()) {
                 continue;

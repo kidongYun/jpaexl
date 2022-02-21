@@ -19,10 +19,6 @@ public class SimpleTuple<T> implements Tuple<T> {
         this.data = data;
     }
 
-    public static <T> Tuple<T> empty() {
-        return new SimpleTuple<>(null, new ArrayList<>());
-    }
-
     public static <T> Tuple<T> of(Class<T> clazz, List<Data<?>> tuple) {
         return new SimpleTuple<>(clazz, tuple);
     }

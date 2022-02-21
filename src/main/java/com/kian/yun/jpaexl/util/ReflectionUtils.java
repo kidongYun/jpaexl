@@ -1,16 +1,13 @@
 package com.kian.yun.jpaexl.util;
 
-import com.kian.yun.jpaexl.domain.SimpleData;
-import com.kian.yun.jpaexl.domain.SimpleTuple;
+
+import com.kian.yun.jpaexl.domain.Schema;
+import com.kian.yun.jpaexl.domain.SimpleSchema;
 import com.kian.yun.jpaexl.exception.JpaexlException;
 import lombok.extern.slf4j.Slf4j;
 
-import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
-import java.util.Optional;
-import java.util.stream.Collectors;
 
 import static com.kian.yun.jpaexl.code.JpaexlCode.FAIL_TO_FIND_FIELD_MATCHED_ANNOTATION_TYPE;
 
@@ -24,5 +21,9 @@ public class ReflectionUtils {
         target.setAccessible(true);
 
         return target;
+    }
+
+    public static Schema<?> getSchemaByField(Field field) {
+        return SimpleSchema.of(field.getType(), field.getName());
     }
 }

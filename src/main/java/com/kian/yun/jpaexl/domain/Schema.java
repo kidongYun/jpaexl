@@ -1,7 +1,7 @@
 package com.kian.yun.jpaexl.domain;
 
 public interface Schema<T> {
-    T getType();
+    Class<T> getType();
 
     String getName();
 }

@@ -1,6 +1,7 @@
 package com.kian.yun.jpaexl.domain;
 
 import lombok.Builder;
+
 @Builder
 public class SimpleSchema<T> implements Schema<T> {
     private final Class<T> type;
@@ -11,12 +12,12 @@ public class SimpleSchema<T> implements Schema<T> {
     }
 
     @Override
-    public T getType() {
-        return null;
+    public Class<T> getType() {
+        return type;
     }
 
     @Override
     public String getName() {
-        return null;
+        return name;
     }
 }
