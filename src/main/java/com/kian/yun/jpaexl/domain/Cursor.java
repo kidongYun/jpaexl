@@ -24,17 +24,18 @@ public class Cursor {
         return Cursor.builder().row(row).cell(cell).build();
     }
 
-    public int shiftRow() {
-        return row++;
+    public Cursor shiftRow() {
+        row++;
+        return this;
     }
 
-    public int shiftCell(int cellSize) {
+    public Cursor shiftCell(int cellSize) {
         if(cell >= cellSize) {
-            int temp = cell;
             setCell(Constants.CUR_CELL_INIT_VAL);
-            return temp;
+        } else {
+            cell++;
         }
 
-        return cell++;
+        return this;
     }
 }

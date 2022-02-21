@@ -6,7 +6,9 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Getter(AccessLevel.PRIVATE)
@@ -28,7 +30,7 @@ public class SimpleTable<T> implements Table<T> {
 
         setRowSize(isExist ? findRowSize() : 0);
         setCellSize(isExist ? findCellSize() : clazz.getFields().length);
-        table.setCursor(Cursor.of(getRowSize(), Constants.CUR_CELL_INIT_VAL));ss
+        setCursor(Cursor.of(getRowSize(), Constants.CUR_CELL_INIT_VAL));
     }
 
     public static <T> Table<T> getInstance(Class<T> clazz) {
@@ -47,13 +49,19 @@ public class SimpleTable<T> implements Table<T> {
 
     @Override
     public void save(Tuple<T> tuple) {
+        List<String> values = tuple.getData().stream().map(Data::getValue).collect(Collectors.toList());
 
+        for(String value : values) {
+            persistenceManager.insert(clazz.getName(), cursor.shiftCell(cellSize), value);
+        }
+
+        persistenceManager.flush();
     }
 
     private int findCellSize() {
         int size = 0;
         for(int i=Constants.CUR_CELL_INIT_VAL; i<Constants.CUR_CELL_MAX_VAL; i++) {
-            Optional<String> valueOpt = getPersistenceManager().findValue(clazz.getName(), Cursor.of(Constants.CUR_ROW_SCHEMA_NAME, i));
+            Optional<String> valueOpt = getPersistenceManager().find(clazz.getName(), Cursor.of(Constants.CUR_ROW_SCHEMA_NAME, i));
 
             if(valueOpt.isEmpty()) {
                 break;
@@ -67,7 +75,7 @@ public class SimpleTable<T> implements Table<T> {
 
     private int findRowSize() {
         for(int i=Constants.CUR_ROW_INIT_VAL; i<Constants.CUR_ROW_MAX_VAL; i++) {
-            Optional<String> valueOpt = getPersistenceManager().findValue(clazz.getName(), Cursor.of(i, Constants.CUR_CELL_INIT_VAL));
+            Optional<String> valueOpt = getPersistenceManager().find(clazz.getName(), Cursor.of(i, Constants.CUR_CELL_INIT_VAL));
 
             if(valueOpt.isPresent()) {
                 continue;

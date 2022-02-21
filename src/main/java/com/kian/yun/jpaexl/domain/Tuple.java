@@ -1,5 +1,9 @@
 package com.kian.yun.jpaexl.domain;
 
+import java.util.Collection;
+
 public interface Tuple<T> {
-    Iterable<Data<?>> getData();
+    Collection<Data<?>> getData();
+
+    Collection<Schema<?>> getSchemas();
 }

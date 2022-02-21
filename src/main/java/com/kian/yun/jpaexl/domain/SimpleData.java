@@ -6,8 +6,8 @@ import lombok.Getter;
 @Getter
 @Builder
 public class SimpleData<T> implements Data<T> {
-    private final SimpleSchema<T> schema;
-    private final T value;
+    private final Schema<T> schema;
+    private final String value;
 
     @SuppressWarnings("unchecked")
     public static <T> Data<T> of(String name, T value) {
@@ -18,31 +18,11 @@ public class SimpleData<T> implements Data<T> {
 
         return SimpleData.<T>builder()
                 .schema(schema)
-                .value(value)
+                .value(String.valueOf(value))
                 .build();
     }
 
-    public static <T> Data<T> of(SimpleSchema<T> schema, T value) {
+    public static <T> Data<T> of(Schema<T> schema, String value) {
         return new SimpleData<>(schema, value);
-    }
-
-    @Override
-    public Iterable<SimpleSchema<T>> getSchemas() {
-        return null;
-    }
-
-    @Override
-    public SimpleSchema<T> getSchemaByName(String name) {
-        return null;
-    }
-
-    @Override
-    public Iterable<String> getValues() {
-        return null;
-    }
-
-    @Override
-    public String getValueBySchemaName(String schemaName) {
-        return null;
     }
 }

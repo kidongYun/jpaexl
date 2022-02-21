@@ -4,7 +4,9 @@ import lombok.Builder;
 import lombok.Getter;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Getter
 @Builder
@@ -26,7 +28,7 @@ public class SimpleTuple<T> implements Tuple<T> {
     }
 
     @Override
-    public Iterable<Data<?>> getData() {
-        return null;
+    public Collection<Schema<?>> getSchemas() {
+        return data.stream().map(Data::getSchema).collect(Collectors.toList());
     }
 }

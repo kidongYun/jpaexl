@@ -2,6 +2,7 @@ package com.kian.yun.jpaexl.domain;
 
 import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.EmptyFileException;
+import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
@@ -60,13 +61,29 @@ public class SimplePersistenceManager implements PersistenceManager {
     }
 
     @Override
-    public Optional<String> findValue(String tableName, Cursor cursor) {
+    public Optional<String> find(String tableName, Cursor cursor) {
         return Optional.empty();
     }
 
     @Override
-    public void insertValue(String tableName, Cursor cursor, String value) {
+    public void insert(String tableName, Cursor cursor, String value) {
+        Sheet sheet = workbook.getSheet(tableName);
+        log.info(String.valueOf(sheet));
 
+        if(Objects.isNull(sheet)) {
+            log.info("!!!!!!");
+            sheet = workbook.createSheet(tableName);
+        }
+
+        Row row = sheet.getRow(cursor.getRow());
+
+        if(Objects.isNull(row)) {
+            row = sheet.createRow(cursor.getRow());
+        }
+
+        row.createCell(cursor.getCell()).setCellValue(value);
+
+        log.info("Inserted '{}' into row : '{}', cell : '{}' at excel...", value, cursor.getRow(), cursor.getCell());
     }
 
     @Override
