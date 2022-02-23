@@ -12,7 +12,7 @@ public class Cursor {
     public static final int ROW_SCHEMA_NAME = 1;
     public static final int ROW_SCHEMA_TYPE = 2;
     public static final int ROW_INIT_VAL = 3;
-    public static final int CELL_INIT_VAL = 0;
+    public static final int CELL_INIT_VAL = 1;
 
     public static final int ROW_MAX_VAL = 9999;
     public static final int CELL_MAX_VAL = 9999;
@@ -29,8 +29,7 @@ public class Cursor {
     }
 
     public Cursor shift(int cellSize) {
-        log.info("cell : {}", cell);
-        log.info("cellSize : {}", cellSize);
+        Cursor cursor = Cursor.of(row, cell);
 
         if(cell >= cellSize) {
             setCell(Cursor.CELL_INIT_VAL);
@@ -38,6 +37,6 @@ public class Cursor {
             cell++;
         }
 
-        return this;
+        return cursor;
     }
 }

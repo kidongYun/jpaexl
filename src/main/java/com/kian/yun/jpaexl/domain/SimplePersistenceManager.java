@@ -108,6 +108,38 @@ public class SimplePersistenceManager implements PersistenceManager {
     }
 
     @Override
+    public Integer cellSize(String tableName) {
+        int size = 0;
+
+        for(int i=Cursor.CELL_INIT_VAL; i<Cursor.CELL_MAX_VAL; i++) {
+            Optional<String> valueOpt = find(tableName, Cursor.of(Cursor.ROW_SCHEMA_NAME, i));
+
+            if(valueOpt.isEmpty()) {
+                break;
+            }
+
+            size++;
+        }
+
+        return size;
+    }
+
+    @Override
+    public Integer rowSize(String tableName) {
+        for(int i=Cursor.ROW_INIT_VAL; i<Cursor.ROW_MAX_VAL; i++) {
+            Optional<String> valueOpt = find(tableName, Cursor.of(i).shift(cellSize(tableName)));
+
+            if(valueOpt.isPresent()) {
+                continue;
+            }
+
+            return i;
+        }
+
+        return 0;
+    }
+
+    @Override
     public void flush() {
         try {
             FileOutputStream fos = new FileOutputStream("./jpaexl.xlsx");

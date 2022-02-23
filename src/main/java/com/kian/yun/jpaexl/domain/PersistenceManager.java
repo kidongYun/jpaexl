@@ -15,5 +15,9 @@ public interface PersistenceManager {
 
     void insert(String tableName, Cursor cursor, String value);
 
+    Integer cellSize(String tableName);
+
+    Integer rowSize(String tableName);
+
     void flush();
 }

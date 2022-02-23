@@ -18,15 +18,11 @@ public class SimpleTable<T> implements Table<T> {
     private final PersistenceManager persistenceManager;
     private final Class<T> clazz;
 
-    private Integer cellSize;
-
     private SimpleTable(Class<T> clazz) {
         this.persistenceManager = SimplePersistenceManager.getInstance();
         this.clazz = clazz;
 
         boolean isExist = persistenceManager.isExist(clazz.getSimpleName());
-
-        setCellSize(isExist ? findCellSize() : clazz.getDeclaredFields().length);
 
         if(!isExist) {
             List<Schema<?>> schemas = Arrays.stream(clazz.getDeclaredFields())
@@ -54,7 +50,7 @@ public class SimpleTable<T> implements Table<T> {
     @Override
     public void save(Tuple<T> tuple) {
         List<String> values = tuple.getData().stream().map(Data::getValue).collect(Collectors.toList());
-        insertRow(values, Cursor.of(findRowSize(), Cursor.CELL_INIT_VAL));
+        insertRow(values, Cursor.of(persistenceManager.rowSize(clazz.getSimpleName()), Cursor.CELL_INIT_VAL));
 
         persistenceManager.flush();
     }
@@ -69,37 +65,11 @@ public class SimpleTable<T> implements Table<T> {
 
     private void insertRow(List<String> values, Cursor cursor) {
         for(String value : values) {
-            persistenceManager.insert(clazz.getSimpleName(), cursor.shift(cellSize), value);
+            persistenceManager.insert(clazz.getSimpleName(), cursor.shift(cellSize()), value);
         }
     }
 
-    private Integer findCellSize() {
-        int size = 0;
-
-        for(int i=Cursor.of(Cursor.ROW_SCHEMA_NAME).shift(cellSize).getCell(); i<Cursor.CELL_MAX_VAL; i++) {
-            Optional<String> valueOpt = getPersistenceManager().find(clazz.getSimpleName(), Cursor.of(Cursor.ROW_SCHEMA_NAME, i));
-
-            if(valueOpt.isEmpty()) {
-                break;
-            }
-
-            size++;
-        }
-
-        return size;
-    }
-
-    private Integer findRowSize() {
-        for(int i=Cursor.ROW_INIT_VAL; i<Cursor.ROW_MAX_VAL; i++) {
-            Optional<String> valueOpt = getPersistenceManager().find(clazz.getSimpleName(), Cursor.of(i).shift(cellSize));
-
-            if(valueOpt.isPresent()) {
-                continue;
-            }
-
-            return i;
-        }
-
-        return 0;
+    private Integer cellSize() {
+        return clazz.getDeclaredFields().length;
     }
 }
