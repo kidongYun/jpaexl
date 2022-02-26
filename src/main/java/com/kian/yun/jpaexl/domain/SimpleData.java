@@ -1,7 +1,9 @@
 package com.kian.yun.jpaexl.domain;
 
 import lombok.Builder;
+import lombok.Getter;
 
+@Getter
 @Builder
 public class SimpleData<T> implements Data<T> {
     private final Schema<T> schema;
@@ -22,16 +24,5 @@ public class SimpleData<T> implements Data<T> {
 
     public static <T> Data<T> of(Schema<T> schema, String value) {
         return new SimpleData<>(schema, value);
-    }
-
-    @Override
-    public Schema<T> getSchema() {
-
-        return null;
-    }
-
-    @Override
-    public String getValue() {
-        return null;
     }
 }

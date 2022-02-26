@@ -55,3 +55,7 @@ class SimpleTable {
 - create Asserts object.
 - do condition processing whether the same id tuples are already existed in Excel.
 - get annotation from Excel
+
+# 2022.2.26
+
+- resolve null issue when you call save message. (complete)

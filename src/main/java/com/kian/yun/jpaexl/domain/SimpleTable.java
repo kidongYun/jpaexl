@@ -49,7 +49,7 @@ public class SimpleTable<T> implements Table<T> {
 
     @Override
     public void save(Tuple<T> tuple) {
-        List<String> values = tuple.getData().stream().map(Data::getValue).collect(Collectors.toList());
+        List<String> values = tuple.getValues();
         insertRow(values, Cursor.of(persistenceManager.rowSize(clazz.getSimpleName()), Cursor.CELL_INIT_VAL));
 
         persistenceManager.flush();

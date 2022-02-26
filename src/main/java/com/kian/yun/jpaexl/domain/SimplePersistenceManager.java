@@ -82,7 +82,7 @@ public class SimplePersistenceManager implements PersistenceManager {
         }
 
         String value = cell.getStringCellValue();
-        log.info("found '{}' from row : '{}', cell : '{}' at table named '{}'", value, cursor.getRow(), cursor.getCell(), tableName);
+        log.info("found '{}' from Cursor : [{}. {}] at table named '{}'", value, cursor.getRow(), cursor.getCell(), tableName);
 
 
         return Optional.of(value);
@@ -104,7 +104,7 @@ public class SimplePersistenceManager implements PersistenceManager {
 
         row.createCell(cursor.getCell()).setCellValue(value);
 
-        log.info("Inserted '{}' into row : '{}', cell : '{}' at excel...", value, cursor.getRow(), cursor.getCell());
+        log.info("Inserted '{}' into Cursor : [{}. {}] at excel...", value, cursor.getRow(), cursor.getCell());
     }
 
     @Override

@@ -19,8 +19,8 @@ public class SimpleTuple<T> implements Tuple<T> {
         this.data = data;
     }
 
-    public static <T> Tuple<T> of(Class<T> clazz, List<Data<?>> tuple) {
-        return new SimpleTuple<>(clazz, tuple);
+    public static <T> Tuple<T> of(Class<T> clazz, List<Data<?>> data) {
+        return new SimpleTuple<>(clazz, data);
     }
 
     @Override
@@ -33,7 +33,8 @@ public class SimpleTuple<T> implements Tuple<T> {
         return Arrays.stream(clazz.getDeclaredFields()).map(SimpleSchema::of).collect(Collectors.toList());
     }
 
-    private Integer cellSize() {
-        return clazz.getDeclaredFields().length;
+    @Override
+    public List<String> getValues() {
+        return this.getData().stream().map(Data::getValue).collect(Collectors.toList());
     }
 }
