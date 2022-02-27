@@ -59,3 +59,6 @@ class SimpleTable {
 # 2022.2.26
 
 - resolve null issue when you call save message. (complete)
+- if some items what have same id with the one that is already existed in excel, then it should be not added in there.
+  - implements isIdentifier() method (complete)
+  - implements findCursor() method

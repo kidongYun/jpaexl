@@ -4,4 +4,6 @@ public interface Schema<T> {
     Class<T> getType();
 
     String getName();
+
+    Boolean isIdentifier();
 }

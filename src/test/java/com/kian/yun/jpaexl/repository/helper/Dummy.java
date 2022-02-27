@@ -31,4 +31,8 @@ public class Dummy {
                 .column3("col3 of " + id)
                 .build();
     }
+
+    public static Dummy empty() {
+        return Dummy.builder().build();
+    }
 }

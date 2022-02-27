@@ -11,7 +11,9 @@ public interface PersistenceManager {
 
     boolean isExist(String tableName);
 
-    Optional<String> find(String tableName, Cursor cursor);
+    Optional<String> findValue(String tableName, Cursor cursor);
+
+    Optional<Cursor> searchValue(String tableName, String target, Cursor from, Cursor to);
 
     void insert(String tableName, Cursor cursor, String value);
 

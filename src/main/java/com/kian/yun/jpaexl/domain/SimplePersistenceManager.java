@@ -62,7 +62,7 @@ public class SimplePersistenceManager implements PersistenceManager {
     }
 
     @Override
-    public Optional<String> find(String tableName, Cursor cursor) {
+    public Optional<String> findValue(String tableName, Cursor cursor) {
         Sheet sheet = getSheet(tableName);
 
         if(Objects.isNull(sheet)) {
@@ -89,6 +89,23 @@ public class SimplePersistenceManager implements PersistenceManager {
     }
 
     @Override
+    public Optional<Cursor> searchValue(String tableName, String target, Cursor from, Cursor to) {
+        Sheet sheet = getSheet(tableName);
+
+        if(Objects.isNull(sheet)) {
+            return Optional.empty();
+        }
+
+        for(int i=from.getRow(); i<to.getRow(); i++) {
+            for(int j=from.getCell(); j<to.getCell(); j++) {
+                log.info("DEBUG [{}, {}]", i, j);
+            }
+        }
+
+        return Optional.empty();
+    }
+
+    @Override
     public void insert(String tableName, Cursor cursor, String value) {
         Sheet sheet = workbook.getSheet(tableName);
 
@@ -112,7 +129,7 @@ public class SimplePersistenceManager implements PersistenceManager {
         int size = 0;
 
         for(int i=Cursor.CELL_INIT_VAL; i<Cursor.CELL_MAX_VAL; i++) {
-            Optional<String> valueOpt = find(tableName, Cursor.of(Cursor.ROW_SCHEMA_NAME, i));
+            Optional<String> valueOpt = this.findValue(tableName, Cursor.of(Cursor.ROW_SCHEMA_NAME, i));
 
             if(valueOpt.isEmpty()) {
                 break;
@@ -127,7 +144,7 @@ public class SimplePersistenceManager implements PersistenceManager {
     @Override
     public Integer rowSize(String tableName) {
         for(int i=Cursor.ROW_INIT_VAL; i<Cursor.ROW_MAX_VAL; i++) {
-            Optional<String> valueOpt = find(tableName, Cursor.of(i).shift(cellSize(tableName)));
+            Optional<String> valueOpt = this.findValue(tableName, Cursor.of(i).shift(cellSize(tableName)));
 
             if(valueOpt.isPresent()) {
                 continue;
