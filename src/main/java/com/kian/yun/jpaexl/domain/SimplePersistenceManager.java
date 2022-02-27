@@ -96,8 +96,19 @@ public class SimplePersistenceManager implements PersistenceManager {
             return Optional.empty();
         }
 
-        for(int i=from.getRow(); i<to.getRow(); i++) {
-            for(int j=from.getCell(); j<to.getCell(); j++) {
+        for(int i=from.getRow(); i<=to.getRow(); i++) {
+            for(int j=from.getCell(); j<=to.getCell(); j++) {
+                Cursor cursor = Cursor.of(i, j);
+                Optional<String> valueOpt = this.findValue(tableName, cursor);
+
+                if(valueOpt.isEmpty()) {
+                    continue;
+                }
+
+                if(target.equals(valueOpt.get())) {
+                    return Optional.of(cursor);
+                }
+
                 log.info("DEBUG [{}, {}]", i, j);
             }
         }

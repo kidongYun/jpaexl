@@ -7,10 +7,9 @@ import org.junit.jupiter.api.Test;
 import static org.assertj.core.api.Assertions.assertThat;
 
 class SimpleSchemaTest {
-
     @Test
-    @DisplayName("")
-    public void of_shouldBeMappedFieldsProperly() {
+    @DisplayName("of 함수로 SimpleSchema 객체 생성시 데이터가 잘 매핑되어야 한다")
+    public void of_shouldBeMappedFieldsProperlyWhenItIsCreated() {
         // given
 
         // when
@@ -21,5 +20,4 @@ class SimpleSchemaTest {
         assertThat(schema.getType()).isEqualTo(Dummy.class.getDeclaredFields()[0].getType());
         assertThat(schema.isIdentifier()).isEqualTo(true);
     }
-
 }

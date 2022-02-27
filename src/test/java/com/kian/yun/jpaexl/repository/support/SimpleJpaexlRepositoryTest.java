@@ -48,7 +48,6 @@ class SimpleJpaexlRepositoryTest {
         Dummy dummy = jpaexlRepository.findById(2L).orElse(null);
 
         // when
-        log.info(dummy.toString());
 
         // then
     }
@@ -61,7 +60,5 @@ class SimpleJpaexlRepositoryTest {
         List<Dummy> dummies = IterableUtils.toList(jpaexlRepository.findAll());
 
         // then
-        log.info(dummies.size() + "");
-        log.info(dummies.get(0).toString());
     }
 }

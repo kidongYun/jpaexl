@@ -16,9 +16,11 @@ import java.util.stream.Collectors;
 @Repository
 public class SimpleJpaexlRepository<T, ID> implements JpaexlRepository<T, ID> {
     private final Class<T> clazz;
+    private final Table<T> table;
 
     public SimpleJpaexlRepository(Class<T> clazz) {
         this.clazz = clazz;
+        this.table = SimpleTable.getInstance(clazz);
     }
 
     @Override
@@ -30,7 +32,7 @@ public class SimpleJpaexlRepository<T, ID> implements JpaexlRepository<T, ID> {
 
         Tuple<T> tuple = SimpleTuple.of(clazz, data);
 
-        SimpleTable.getInstance(clazz).save(tuple);
+        table.save(tuple);
 
         return entity;
     }
@@ -42,6 +44,7 @@ public class SimpleJpaexlRepository<T, ID> implements JpaexlRepository<T, ID> {
 
     @Override
     public Optional<T> findById(ID id) {
+        table.findById(String.valueOf(id));
         return Optional.empty();
     }
 

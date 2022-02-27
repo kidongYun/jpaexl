@@ -1,5 +1,7 @@
 package com.kian.yun.jpaexl.domain;
 
+import com.kian.yun.jpaexl.code.JpaexlCode;
+import com.kian.yun.jpaexl.exception.JpaexlException;
 import com.kian.yun.jpaexl.util.ReflectionUtils;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -22,14 +24,10 @@ public class SimpleTable<T> implements Table<T> {
         this.persistenceManager = SimplePersistenceManager.getInstance();
         this.clazz = clazz;
 
-        boolean isExist = persistenceManager.isExist(clazz.getSimpleName());
+        boolean isExist = persistenceManager.isExist(this.getTableName());
 
         if(!isExist) {
-            List<Schema<?>> schemas = Arrays.stream(clazz.getDeclaredFields())
-                    .map(ReflectionUtils::getSchemaByField)
-                    .collect(Collectors.toList());
-
-            initTable(schemas);
+            initTable(this.getSchemas());
         }
     }
 
@@ -39,19 +37,35 @@ public class SimpleTable<T> implements Table<T> {
 
     @Override
     public Optional<Tuple<T>> findById(String id) {
+        log.info("DEBUG findById : {}", id);
+
+        String idSchemaName = getSchemas().stream().filter(Schema::isIdentifier).findFirst()
+                .orElseThrow(() -> JpaexlException.of(JpaexlCode.FAIL_TO_FIND_ID_SCHEMA)).getName();
+
+        log.info("DEBUG idSchemaName : {}", idSchemaName);
+
+        Cursor idCursor = persistenceManager.searchValue(this.getTableName(), idSchemaName, Cursor.of(Cursor.ROW_SCHEMA_NAME, Cursor.CELL_INIT_VAL), Cursor.of(Cursor.ROW_SCHEMA_NAME, cellSize()))
+                .orElseThrow(() -> JpaexlException.of(JpaexlCode.FAIL_TO_FIND_SCHEMA_NAME));
+
+        log.info("DEBUG idCursor : {}", idCursor.toString());
+
+        Cursor cursor = persistenceManager.searchValue(this.getTableName(), id, Cursor.of(Cursor.ROW_INIT_VAL, idCursor.getCell()), Cursor.of(Cursor.ROW_MAX_VAL, idCursor.getCell()))
+                .orElseThrow(() -> JpaexlException.of(JpaexlCode.FAIL_TO_SEARCH_CURSOR));
+
+        log.info("DEBUG cursor : {}", cursor.toString());
+
         return Optional.empty();
     }
 
     @Override
     public Iterable<Tuple<T>> findAll() {
-
         return null;
     }
 
     @Override
     public void save(Tuple<T> tuple) {
         List<String> values = tuple.getValues();
-        insertRow(values, Cursor.of(persistenceManager.rowSize(clazz.getSimpleName()), Cursor.CELL_INIT_VAL));
+        insertRow(values, Cursor.of(persistenceManager.rowSize(this.getTableName()), Cursor.CELL_INIT_VAL));
 
         persistenceManager.flush();
     }
@@ -66,8 +80,22 @@ public class SimpleTable<T> implements Table<T> {
 
     private void insertRow(List<String> values, Cursor cursor) {
         for(String value : values) {
-            persistenceManager.insert(clazz.getSimpleName(), cursor.shift(cellSize()), value);
+            persistenceManager.insert(this.getTableName(), cursor.shift(cellSize()), value);
         }
+    }
+
+    private List<String> findRow(Cursor cursor) {
+        persistenceManager.findValue(this.getTableName(), cursor.shift(cellSize()));
+    }
+
+    private String getTableName() {
+        return clazz.getSimpleName();
+    }
+
+    private List<Schema<?>> getSchemas() {
+        return Arrays.stream(clazz.getDeclaredFields())
+                .map(ReflectionUtils::getSchemaByField)
+                .collect(Collectors.toList());
     }
 
     private Integer cellSize() {
