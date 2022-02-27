@@ -22,6 +22,9 @@ public enum JpaexlCode {
     FAIL_TO_FIND_VALUE("XL0007", "String value is not found in Excel"),
     FAIL_TO_FIND_SCHEMA_ANNOTATION("XL0008", "Schema annotations are not found in Excel"),
     FAIL_TO_SEARCH_CURSOR("XL0009", "Cursor is not searched in Excel"),
+
+    /* TABLE */
+    FAIL_TO_FIND_TUPLE_BY_ID("TB0001", "Tuple is not found from Table"),
     ;
 
     private final String name;

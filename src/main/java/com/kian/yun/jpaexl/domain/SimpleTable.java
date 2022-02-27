@@ -8,10 +8,12 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 @Slf4j
 @Getter(AccessLevel.PRIVATE)
@@ -37,24 +39,24 @@ public class SimpleTable<T> implements Table<T> {
 
     @Override
     public Optional<Tuple<T>> findById(String id) {
-        log.info("DEBUG findById : {}", id);
+        List<Schema<?>> schemas = getSchemas();
 
-        String idSchemaName = getSchemas().stream().filter(Schema::isIdentifier).findFirst()
+        String idSchemaName = schemas.stream().filter(Schema::isIdentifier).findFirst()
                 .orElseThrow(() -> JpaexlException.of(JpaexlCode.FAIL_TO_FIND_ID_SCHEMA)).getName();
-
-        log.info("DEBUG idSchemaName : {}", idSchemaName);
 
         Cursor idCursor = persistenceManager.searchValue(this.getTableName(), idSchemaName, Cursor.of(Cursor.ROW_SCHEMA_NAME, Cursor.CELL_INIT_VAL), Cursor.of(Cursor.ROW_SCHEMA_NAME, cellSize()))
                 .orElseThrow(() -> JpaexlException.of(JpaexlCode.FAIL_TO_FIND_SCHEMA_NAME));
 
-        log.info("DEBUG idCursor : {}", idCursor.toString());
-
         Cursor cursor = persistenceManager.searchValue(this.getTableName(), id, Cursor.of(Cursor.ROW_INIT_VAL, idCursor.getCell()), Cursor.of(Cursor.ROW_MAX_VAL, idCursor.getCell()))
                 .orElseThrow(() -> JpaexlException.of(JpaexlCode.FAIL_TO_SEARCH_CURSOR));
 
-        log.info("DEBUG cursor : {}", cursor.toString());
+        List<String> values = findRow(cursor);
 
-        return Optional.empty();
+        List<Data<?>> data = IntStream.range(0, schemas.size())
+                .mapToObj(i -> SimpleData.of(schemas.get(i), values.get(i)))
+                .collect(Collectors.toList());
+
+        return Optional.of(SimpleTuple.of(this.getClazz(), data));
     }
 
     @Override
@@ -85,7 +87,10 @@ public class SimpleTable<T> implements Table<T> {
     }
 
     private List<String> findRow(Cursor cursor) {
-        persistenceManager.findValue(this.getTableName(), cursor.shift(cellSize()));
+        return IntStream.rangeClosed(Cursor.CELL_INIT_VAL, cellSize())
+                .mapToObj(i -> persistenceManager.findValue(this.getTableName(), Cursor.of(cursor.getRow(), i)))
+                .map(opt -> opt.orElseThrow(() -> JpaexlException.of(JpaexlCode.FAIL_TO_FIND_VALUE)))
+                .collect(Collectors.toList());
     }
 
     private String getTableName() {

@@ -1,6 +1,8 @@
 package com.kian.yun.jpaexl.repository.support;
 
+import com.kian.yun.jpaexl.code.JpaexlCode;
 import com.kian.yun.jpaexl.domain.*;
+import com.kian.yun.jpaexl.exception.JpaexlException;
 import com.kian.yun.jpaexl.repository.JpaexlRepository;
 import com.kian.yun.jpaexl.util.ExceptionUtils;
 import lombok.extern.slf4j.Slf4j;
@@ -44,7 +46,9 @@ public class SimpleJpaexlRepository<T, ID> implements JpaexlRepository<T, ID> {
 
     @Override
     public Optional<T> findById(ID id) {
-        table.findById(String.valueOf(id));
+        Tuple<T> tuple = table.findById(String.valueOf(id))
+                .orElseThrow(() -> JpaexlException.of(JpaexlCode.FAIL_TO_FIND_TUPLE_BY_ID));
+
         return Optional.empty();
     }
 

@@ -108,8 +108,6 @@ public class SimplePersistenceManager implements PersistenceManager {
                 if(target.equals(valueOpt.get())) {
                     return Optional.of(cursor);
                 }
-
-                log.info("DEBUG [{}, {}]", i, j);
             }
         }
 

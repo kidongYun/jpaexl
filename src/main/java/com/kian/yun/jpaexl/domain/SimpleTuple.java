@@ -24,11 +24,6 @@ public class SimpleTuple<T> implements Tuple<T> {
     }
 
     @Override
-    public Collection<Data<?>> getData() {
-        return data;
-    }
-
-    @Override
     public Collection<Schema<?>> getSchemas() {
         return Arrays.stream(clazz.getDeclaredFields()).map(SimpleSchema::of).collect(Collectors.toList());
     }
