@@ -45,9 +45,10 @@ class SimpleJpaexlRepositoryTest {
     @DisplayName("")
     public void findById_test() {
         // given
-        Dummy dummy = jpaexlRepository.findById(2L).orElse(null);
+        Dummy dummy = jpaexlRepository.findById(1L).orElse(null);
 
         // when
+        log.info("DEBUG dummy : {}", dummy.toString());
 
         // then
     }

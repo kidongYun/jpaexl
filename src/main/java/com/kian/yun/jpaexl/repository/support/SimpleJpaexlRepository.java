@@ -5,6 +5,7 @@ import com.kian.yun.jpaexl.domain.*;
 import com.kian.yun.jpaexl.exception.JpaexlException;
 import com.kian.yun.jpaexl.repository.JpaexlRepository;
 import com.kian.yun.jpaexl.util.ExceptionUtils;
+import com.kian.yun.jpaexl.util.ReflectionUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -49,7 +50,7 @@ public class SimpleJpaexlRepository<T, ID> implements JpaexlRepository<T, ID> {
         Tuple<T> tuple = table.findById(String.valueOf(id))
                 .orElseThrow(() -> JpaexlException.of(JpaexlCode.FAIL_TO_FIND_TUPLE_BY_ID));
 
-        return Optional.empty();
+        return ReflectionUtils.createInstanceByTuple(tuple);
     }
 
     @Override
