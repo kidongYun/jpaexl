@@ -61,5 +61,7 @@ class SimpleJpaexlRepositoryTest {
         List<Dummy> dummies = IterableUtils.toList(jpaexlRepository.findAll());
 
         // then
+        log.info("DEBUG size : {}", dummies.size());
+        log.info(dummies.toString());
     }
 }

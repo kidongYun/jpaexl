@@ -24,7 +24,7 @@ public class Cursor {
         return Cursor.builder().row(row).cell(cell).build();
     }
 
-    public static Cursor of(int row) {
+    public static Cursor row(int row) {
         return Cursor.builder().row(row).cell(CELL_INIT_VAL).build();
     }
 

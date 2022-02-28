@@ -153,7 +153,7 @@ public class SimplePersistenceManager implements PersistenceManager {
     @Override
     public Integer rowSize(String tableName) {
         for(int i=Cursor.ROW_INIT_VAL; i<Cursor.ROW_MAX_VAL; i++) {
-            Optional<String> valueOpt = this.findValue(tableName, Cursor.of(i).shift(cellSize(tableName)));
+            Optional<String> valueOpt = this.findValue(tableName, Cursor.row(i).shift(cellSize(tableName)));
 
             if(valueOpt.isPresent()) {
                 continue;

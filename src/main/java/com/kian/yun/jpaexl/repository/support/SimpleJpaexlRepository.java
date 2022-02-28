@@ -7,6 +7,7 @@ import com.kian.yun.jpaexl.repository.JpaexlRepository;
 import com.kian.yun.jpaexl.util.ExceptionUtils;
 import com.kian.yun.jpaexl.util.ReflectionUtils;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections4.IterableUtils;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -14,6 +15,7 @@ import org.springframework.stereotype.Repository;
 
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 @Slf4j
 @Repository
@@ -60,8 +62,12 @@ public class SimpleJpaexlRepository<T, ID> implements JpaexlRepository<T, ID> {
 
     @Override
     public Iterable<T> findAll() {
-        table.findAll();
-        return null;
+        Iterable<Tuple<T>> tuples = table.findAll();
+
+        return StreamSupport.stream(tuples.spliterator(), false)
+                .map(ReflectionUtils::createInstanceByTuple)
+                .map(instance -> instance.orElse(null))
+                .collect(Collectors.toList());
     }
 
     @Override

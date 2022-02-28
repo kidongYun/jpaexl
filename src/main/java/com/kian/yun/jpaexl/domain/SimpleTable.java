@@ -61,7 +61,20 @@ public class SimpleTable<T> implements Table<T> {
 
     @Override
     public Iterable<Tuple<T>> findAll() {
-        return null;
+        List<Schema<?>> schemas = getSchemas();
+
+        List<Tuple<T>> tuples = new ArrayList<>();
+        for(int i=Cursor.ROW_INIT_VAL; i<persistenceManager.rowSize(getTableName()); i++) {
+            List<String> values = findRow(Cursor.row(i));
+
+            List<Data<?>> data = IntStream.range(0, schemas.size())
+                    .mapToObj(j -> SimpleData.of(schemas.get(j), values.get(j)))
+                    .collect(Collectors.toList());
+
+            tuples.add(SimpleTuple.of(this.getClazz(), data));
+        }
+
+        return tuples;
     }
 
     @Override
