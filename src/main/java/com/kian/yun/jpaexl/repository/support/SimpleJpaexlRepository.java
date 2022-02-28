@@ -60,6 +60,7 @@ public class SimpleJpaexlRepository<T, ID> implements JpaexlRepository<T, ID> {
 
     @Override
     public Iterable<T> findAll() {
+        table.findAll();
         return null;
     }
 

@@ -7,7 +7,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 
-@Getter
 public class SimpleTuple<T> implements Tuple<T> {
     private final PersistenceManager persistenceManager;
     private final Class<T> clazz;
@@ -21,6 +20,16 @@ public class SimpleTuple<T> implements Tuple<T> {
 
     public static <T> Tuple<T> of(Class<T> clazz, List<Data<?>> data) {
         return new SimpleTuple<>(clazz, data);
+    }
+
+    @Override
+    public Class<T> getClazz() {
+        return this.clazz;
+    }
+
+    @Override
+    public Collection<Data<?>> getData() {
+        return this.data;
     }
 
     @Override
