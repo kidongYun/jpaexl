@@ -6,6 +6,10 @@ import lombok.Getter;
 @Getter
 @AllArgsConstructor
 public enum JpaexlCode {
+    /* COMMON */
+    FAIL_UNKNOWN("CM0000", "Failure is occured by unknown issue."),
+    DATA_IS_NULL("CM0001", "Data is null."),
+
     /* REFLECTION */
     FAIL_TO_FIND_FIELD_MATCHED_ANNOTATION_TYPE("RF0000", "Fields don't have matched annotation type."),
     FAIL_TO_CREATE_INSTANCE_BY_TUPLE("RF0001", "Tuple can't be converted as the new instance."),

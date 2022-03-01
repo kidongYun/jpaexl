@@ -32,7 +32,7 @@ public class SimpleJpaexlRepository<T, ID> implements JpaexlRepository<T, ID> {
     public <S extends T> S save(S entity) {
         List<Data<?>> data = Arrays.stream(entity.getClass().getDeclaredFields())
                 .peek(f -> f.setAccessible(true))
-                .map(f -> ExceptionUtils.wrap(() -> SimpleData.of(f.getName(), f.get(entity))))
+                .map(f -> ExceptionUtils.wrap(() -> SimpleData.of(ReflectionUtils.getSchemaByField(f), String.valueOf(f.get(entity)))))
                 .collect(Collectors.toList());
 
         Tuple<T> tuple = SimpleTuple.of(clazz, data);

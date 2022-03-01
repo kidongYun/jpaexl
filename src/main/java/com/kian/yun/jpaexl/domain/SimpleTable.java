@@ -91,6 +91,8 @@ public class SimpleTable<T> implements Table<T> {
 
         List<String> schemaTypes = schemas.stream().map(s -> s.getType().getName()).collect(Collectors.toList());
         insertRow(schemaTypes, Cursor.of(Cursor.ROW_SCHEMA_TYPE, Cursor.CELL_INIT_VAL));
+
+        persistenceManager.flush();
     }
 
     private void insertRow(List<String> values, Cursor cursor) {

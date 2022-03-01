@@ -7,6 +7,7 @@ import lombok.ToString;
 
 import javax.persistence.Entity;
 import javax.persistence.Id;
+import java.time.LocalDate;
 
 @Getter
 @Builder
@@ -23,16 +24,15 @@ public class Dummy {
 
     private String column3;
 
+    private LocalDate column4;
+
     public static Dummy of(Long id) {
         return Dummy.builder()
                 .id(id)
                 .column1("col1 of " + id)
                 .column2("col2 of " + id)
                 .column3("col3 of " + id)
+                .column4(LocalDate.now())
                 .build();
-    }
-
-    public static Dummy empty() {
-        return Dummy.builder().build();
     }
 }
