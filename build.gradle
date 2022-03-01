@@ -2,6 +2,7 @@ plugins {
     id 'org.springframework.boot' version '2.6.3'
     id 'io.spring.dependency-management' version '1.0.11.RELEASE'
     id 'java'
+    id 'maven-publish'
 }
 
 group = 'com.kian.yun'
@@ -29,4 +30,16 @@ dependencies {
 
 tasks.named('test') {
     useJUnitPlatform()
+}
+
+publishing {
+    publications {
+        maven(MavenPublication) {
+            groupId = 'com.kian.yun'
+            artifactId = 'jpaexl'
+            version = '0.0.1-SNAPSHOT'
+
+            from components.java
+        }
+    }
 }
