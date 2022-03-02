@@ -9,11 +9,13 @@ public enum JpaexlCode {
     /* COMMON */
     FAIL_UNKNOWN("CM0000", "Failure is occured by unknown issue."),
     DATA_IS_NULL("CM0001", "Data is null."),
+    FAIL_TO_FIND_INSTANCE_TYPE("CM0002", "instanceType field in Instantiation object is not found."),
 
     /* REFLECTION */
     FAIL_TO_FIND_FIELD_MATCHED_ANNOTATION_TYPE("RF0000", "Fields don't have matched annotation type."),
-    FAIL_TO_CREATE_INSTANCE_BY_TUPLE("RF0001", "Tuple can't be converted as the new instance."),
+    FAIL_TO_CREATE_INSTANCE_BY_TUPLE("RF0001", "Tuple can't be instantiated as the new generic type object."),
     FAIL_TO_FIND_ID_SCHEMA("RF0002", "Id Schema is not found"),
+    FAIL_TO_CREATE_INSTANCE_BY_DATA("RF0003", "Data can't be instantiated as the new generic type object."),
 
     /* EXCEL */
     FAIL_TO_FIND_ID_CELL_IN_SCHEMA("XL0000", "Id cell can't be found at Schema row."),

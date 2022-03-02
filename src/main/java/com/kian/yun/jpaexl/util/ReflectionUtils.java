@@ -25,7 +25,6 @@ public class ReflectionUtils {
         Field target = Arrays.stream(fields)
                 .filter(field -> Arrays.stream(field.getAnnotations()).anyMatch(a -> a.annotationType().getCanonicalName().equals(annotationType.getCanonicalName())))
                 .findAny().orElseThrow(() -> new JpaexlException(FAIL_TO_FIND_FIELD_MATCHED_ANNOTATION_TYPE));
-
         target.setAccessible(true);
 
         return target;
@@ -35,15 +34,23 @@ public class ReflectionUtils {
         return SimpleSchema.of(field);
     }
 
-    public static Optional<?> createInstanceBySchema(Schema<?> schema, String value) {
-        String schemaName = schema.getType().getCanonicalName();
+    public static <T> Optional<T> createInstanceByData(Data<T> data) {
+        Instantiation instantiation = Instantiation.of(data.getSchema().getType());
 
-        if(schemaName.equals(String.class.getCanonicalName())) {
-            return schema.getType().getConstructor(String.class).newInstance(value);
-        } else if(schemaName.equals(Long.class.getCanonicalName())) {
+        try {
+            Constructor<T> constructor = data.getSchema().getType()
+                    .getDeclaredConstructor(instantiation.getParameterTypes());
+            constructor.setAccessible(true);
 
-        } else if(schemaName.equals(LocalDate.class.getCanonicalName())) {
+            return Optional.of(constructor.newInstance(instantiation.getProc().apply(data.getValue())));
 
+        } catch (NoSuchMethodException
+                | InvocationTargetException
+                | InstantiationException
+                | IllegalAccessException e) {
+
+            e.printStackTrace();
+            return Optional.empty();
         }
     }
 
@@ -53,13 +60,9 @@ public class ReflectionUtils {
                 .collect(Collectors.toList())
                 .toArray(new Class[]{});
 
-        tuple.getData().stream().forEach(d -> {
-            log.info("DEBUG d.getSchema().getType().getName() : {}", d.getSchema().getType().getName());
-            log.info("DEBUG d.getValue() : {}", d.getValue());
-        });
-
         Object[] values = tuple.getData().stream()
-                .map(d -> ExceptionUtils.wrap(() -> d.getSchema().getType().getConstructor(String.class).newInstance(d.getValue())))
+                .map(ReflectionUtils::createInstanceByData)
+                .map(opt -> opt.orElseThrow(() -> JpaexlException.of(JpaexlCode.FAIL_TO_CREATE_INSTANCE_BY_DATA)))
                 .collect(Collectors.toList())
                 .toArray(new Object[]{});
 
