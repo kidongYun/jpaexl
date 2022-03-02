@@ -11,4 +11,6 @@ public interface Tuple<T> {
     Collection<Schema<?>> getSchemas();
 
     List<String> getValues();
+
+    Data<?> getIdentifier();
 }

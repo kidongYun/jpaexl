@@ -66,6 +66,8 @@ class SimpleTable {
 ## 2022.03.02
 
 - create the instantiation class for building instance of any types like String, Long, LocalDate ... etc (complete)
+- refactor Table interface that it changes id type from String to Data<?> (complete)
+- it should be saved without duplicated id.
 
 ## TODO
 

@@ -8,10 +8,7 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -79,10 +76,28 @@ public class SimpleTable<T> implements Table<T> {
 
     @Override
     public void save(Tuple<T> tuple) {
-        List<String> values = tuple.getValues();
-        insertRow(values, Cursor.of(persistenceManager.rowSize(this.getTableName()), Cursor.CELL_INIT_VAL));
+        if(existsById(tuple.getIdentifier().getValue())) {
+            update(tuple);
+        } else {
+            insert(tuple);
+        }
 
         persistenceManager.flush();
+    }
+
+    @Override
+    public boolean existsById(String id) {
+        return IntStream.range(Cursor.ROW_INIT_VAL, persistenceManager.rowSize(getTableName()))
+                .takeWhile(i -> persistenceManager.findValue(getTableName(), Cursor.of(i, idCursor().getCell())).isPresent())
+                .mapToObj(i -> persistenceManager.findValue(getTableName(), Cursor.of(i, idCursor().getCell())).orElse(null))
+                .anyMatch(id::equals);
+    }
+
+    @Override
+    public List<Schema<?>> getSchemas() {
+        return Arrays.stream(clazz.getDeclaredFields())
+                .map(ReflectionUtils::getSchemaByField)
+                .collect(Collectors.toList());
     }
 
     private void initTable(List<Schema<?>> schemas) {
@@ -93,6 +108,26 @@ public class SimpleTable<T> implements Table<T> {
         insertRow(schemaTypes, Cursor.of(Cursor.ROW_SCHEMA_TYPE, Cursor.CELL_INIT_VAL));
 
         persistenceManager.flush();
+    }
+
+    private void insert(Tuple<T> tuple) {
+        insertRow(tuple.getValues(), Cursor.of(persistenceManager.rowSize(this.getTableName()), Cursor.CELL_INIT_VAL));
+    }
+
+    private void update(Tuple<T> tuple) {
+
+    }
+
+    private Cursor idCursor() {
+        Schema<?> idSchema = getIdSchema().orElseThrow(() -> JpaexlException.of(JpaexlCode.FAIL_TO_FIND_ID_SCHEMA));
+
+        return persistenceManager.searchValue(this.getTableName(), idSchema.getName(), Cursor.of(Cursor.ROW_SCHEMA_NAME, Cursor.CELL_INIT_VAL), Cursor.of(Cursor.ROW_SCHEMA_NAME, cellSize())).orElseThrow(() -> JpaexlException.of(JpaexlCode.FAIL_TO_FIND_ID_SCHEMA));
+    }
+
+    private Optional<Schema<?>> getIdSchema() {
+        return this.getSchemas().stream()
+                .filter(Schema::isIdentifier)
+                .findFirst();
     }
 
     private void insertRow(List<String> values, Cursor cursor) {
@@ -110,12 +145,6 @@ public class SimpleTable<T> implements Table<T> {
 
     private String getTableName() {
         return clazz.getSimpleName();
-    }
-
-    private List<Schema<?>> getSchemas() {
-        return Arrays.stream(clazz.getDeclaredFields())
-                .map(ReflectionUtils::getSchemaByField)
-                .collect(Collectors.toList());
     }
 
     private Integer cellSize() {

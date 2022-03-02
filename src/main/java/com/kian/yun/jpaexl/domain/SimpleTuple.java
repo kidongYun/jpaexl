@@ -41,4 +41,9 @@ public class SimpleTuple<T> implements Tuple<T> {
     public List<String> getValues() {
         return this.getData().stream().map(Data::getValue).collect(Collectors.toList());
     }
+
+    @Override
+    public Data<?> getIdentifier() {
+        return null;
+    }
 }
