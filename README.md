@@ -63,6 +63,10 @@ class SimpleTable {
   - implements isIdentifier() method (complete)
   - implements findCursor() method
 
+## 2022.03.02
+
+- create the factory class for building instance of any types like String, Long, LocalDate ... etc 
+
 ## TODO
 
 - when schema is changed after it is already created, the schema in excel should be updated.

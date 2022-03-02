@@ -10,6 +10,7 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
+import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
@@ -34,11 +35,28 @@ public class ReflectionUtils {
         return SimpleSchema.of(field);
     }
 
+    public static Optional<?> createInstanceBySchema(Schema<?> schema, String value) {
+        String schemaName = schema.getType().getCanonicalName();
+
+        if(schemaName.equals(String.class.getCanonicalName())) {
+            return schema.getType().getConstructor(String.class).newInstance(value);
+        } else if(schemaName.equals(Long.class.getCanonicalName())) {
+
+        } else if(schemaName.equals(LocalDate.class.getCanonicalName())) {
+
+        }
+    }
+
     public static <T> Optional<T> createInstanceByTuple(Tuple<T> tuple) {
         Class<?>[] schemaTypes = tuple.getSchemas().stream()
                 .map(Schema::getType)
                 .collect(Collectors.toList())
                 .toArray(new Class[]{});
+
+        tuple.getData().stream().forEach(d -> {
+            log.info("DEBUG d.getSchema().getType().getName() : {}", d.getSchema().getType().getName());
+            log.info("DEBUG d.getValue() : {}", d.getValue());
+        });
 
         Object[] values = tuple.getData().stream()
                 .map(d -> ExceptionUtils.wrap(() -> d.getSchema().getType().getConstructor(String.class).newInstance(d.getValue())))
