@@ -3,7 +3,6 @@ plugins {
     id 'io.spring.dependency-management' version '1.0.11.RELEASE'
     id 'java'
     id 'maven-publish'
-    id 'maven'
 }
 
 group = 'com.kian.yun'
@@ -39,8 +38,5 @@ publishing {
         mavenJava(MavenPublication) {
             from components.java
         }
-    }
-    repositories {
-        maven { url 'https://jitpack.io' }
     }
 }
