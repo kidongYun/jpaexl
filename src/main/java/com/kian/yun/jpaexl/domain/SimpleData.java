@@ -12,4 +12,9 @@ public class SimpleData<T> implements Data<T> {
     public static <T> Data<T> of(Schema<T> schema, String value) {
         return new SimpleData<>(schema, value);
     }
+
+    @Override
+    public Boolean isIdentifier() {
+        return getSchema().isIdentifier();
+    }
 }

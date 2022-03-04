@@ -4,4 +4,6 @@ public interface Data<T> {
     Schema<T> getSchema();
 
     String getValue();
+
+    Boolean isIdentifier();
 }

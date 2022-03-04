@@ -1,6 +1,7 @@
 package com.kian.yun.jpaexl.domain;
 
-import lombok.Getter;
+import com.kian.yun.jpaexl.code.JpaexlCode;
+import com.kian.yun.jpaexl.exception.JpaexlException;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -8,12 +9,10 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 public class SimpleTuple<T> implements Tuple<T> {
-    private final PersistenceManager persistenceManager;
     private final Class<T> clazz;
     private final List<Data<?>> data;
 
     private SimpleTuple(Class<T> clazz, List<Data<?>> data) {
-        this.persistenceManager = SimplePersistenceManager.getInstance();
         this.clazz = clazz;
         this.data = data;
     }
@@ -44,6 +43,7 @@ public class SimpleTuple<T> implements Tuple<T> {
 
     @Override
     public Data<?> getIdentifier() {
-        return null;
+        return getData().stream().filter(Data::isIdentifier).findFirst()
+                .orElseThrow(() -> JpaexlException.of(JpaexlCode.FAIL_TO_FIND_ID_SCHEMA));
     }
 }

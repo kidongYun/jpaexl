@@ -67,8 +67,12 @@ class SimpleTable {
 
 - create the instantiation class for building instance of any types like String, Long, LocalDate ... etc (complete)
 - refactor Table interface that it changes id type from String to Data<?> (complete)
+
+## 2022.03.04
+
 - it should be saved without duplicated id.
 
 ## TODO
 
 - when schema is changed after it is already created, the schema in excel should be updated.
+- cache Schema in persistanceManager. File I/O for searching it is too occurred frequently. 

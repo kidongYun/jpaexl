@@ -36,39 +36,19 @@ public class SimpleTable<T> implements Table<T> {
 
     @Override
     public Optional<Tuple<T>> findById(String id) {
-        List<Schema<?>> schemas = getSchemas();
+        Cursor idCursor = idCursor();
 
-        String idSchemaName = schemas.stream().filter(Schema::isIdentifier).findFirst()
-                .orElseThrow(() -> JpaexlException.of(JpaexlCode.FAIL_TO_FIND_ID_SCHEMA)).getName();
-
-        Cursor idCursor = persistenceManager.searchValue(this.getTableName(), idSchemaName, Cursor.of(Cursor.ROW_SCHEMA_NAME, Cursor.CELL_INIT_VAL), Cursor.of(Cursor.ROW_SCHEMA_NAME, cellSize()))
-                .orElseThrow(() -> JpaexlException.of(JpaexlCode.FAIL_TO_FIND_SCHEMA_NAME));
-
-        Cursor cursor = persistenceManager.searchValue(this.getTableName(), id, Cursor.of(Cursor.ROW_INIT_VAL, idCursor.getCell()), Cursor.of(Cursor.ROW_MAX_VAL, idCursor.getCell()))
+        Cursor cursor = persistenceManager.searchValue(getTableName(), id, Cursor.of(Cursor.ROW_INIT_VAL, idCursor.getCell()), Cursor.of(persistenceManager.rowSize(getTableName()), idCursor.getCell()))
                 .orElseThrow(() -> JpaexlException.of(JpaexlCode.FAIL_TO_SEARCH_CURSOR));
 
-        List<String> values = findRow(cursor);
-
-        List<Data<?>> data = IntStream.range(0, schemas.size())
-                .mapToObj(i -> SimpleData.of(schemas.get(i), values.get(i)))
-                .collect(Collectors.toList());
-
-        return Optional.of(SimpleTuple.of(this.getClazz(), data));
+        return Optional.of(SimpleTuple.of(this.getClazz(), findData(cursor)));
     }
 
     @Override
     public Iterable<Tuple<T>> findAll() {
-        List<Schema<?>> schemas = getSchemas();
-
         List<Tuple<T>> tuples = new ArrayList<>();
         for(int i=Cursor.ROW_INIT_VAL; i<persistenceManager.rowSize(getTableName()); i++) {
-            List<String> values = findRow(Cursor.row(i));
-
-            List<Data<?>> data = IntStream.range(0, schemas.size())
-                    .mapToObj(j -> SimpleData.of(schemas.get(j), values.get(j)))
-                    .collect(Collectors.toList());
-
-            tuples.add(SimpleTuple.of(this.getClazz(), data));
+            tuples.add(SimpleTuple.of(this.getClazz(), findData(Cursor.row(i))));
         }
 
         return tuples;
@@ -87,10 +67,7 @@ public class SimpleTable<T> implements Table<T> {
 
     @Override
     public boolean existsById(String id) {
-        return IntStream.range(Cursor.ROW_INIT_VAL, persistenceManager.rowSize(getTableName()))
-                .takeWhile(i -> persistenceManager.findValue(getTableName(), Cursor.of(i, idCursor().getCell())).isPresent())
-                .mapToObj(i -> persistenceManager.findValue(getTableName(), Cursor.of(i, idCursor().getCell())).orElse(null))
-                .anyMatch(id::equals);
+        return !Objects.isNull(this.findById(id).orElse(null));
     }
 
     @Override
@@ -115,13 +92,14 @@ public class SimpleTable<T> implements Table<T> {
     }
 
     private void update(Tuple<T> tuple) {
-
+        log.info("DEBUG update()...");
     }
 
     private Cursor idCursor() {
         Schema<?> idSchema = getIdSchema().orElseThrow(() -> JpaexlException.of(JpaexlCode.FAIL_TO_FIND_ID_SCHEMA));
 
-        return persistenceManager.searchValue(this.getTableName(), idSchema.getName(), Cursor.of(Cursor.ROW_SCHEMA_NAME, Cursor.CELL_INIT_VAL), Cursor.of(Cursor.ROW_SCHEMA_NAME, cellSize())).orElseThrow(() -> JpaexlException.of(JpaexlCode.FAIL_TO_FIND_ID_SCHEMA));
+        return persistenceManager.searchValue(this.getTableName(), idSchema.getName(), Cursor.of(Cursor.ROW_SCHEMA_NAME, Cursor.CELL_INIT_VAL), Cursor.of(Cursor.ROW_SCHEMA_NAME, cellSize()))
+                .orElseThrow(() -> JpaexlException.of(JpaexlCode.FAIL_TO_FIND_ID_SCHEMA));
     }
 
     private Optional<Schema<?>> getIdSchema() {
@@ -140,6 +118,16 @@ public class SimpleTable<T> implements Table<T> {
         return IntStream.rangeClosed(Cursor.CELL_INIT_VAL, cellSize())
                 .mapToObj(i -> persistenceManager.findValue(this.getTableName(), Cursor.of(cursor.getRow(), i)))
                 .map(opt -> opt.orElseThrow(() -> JpaexlException.of(JpaexlCode.FAIL_TO_FIND_VALUE)))
+                .collect(Collectors.toList());
+    }
+
+    private List<Data<?>> findData(Cursor cursor) {
+        List<String> values = findRow(cursor);
+
+        List<Schema<?>> schemas = getSchemas();
+
+        return IntStream.range(0, schemas.size())
+                .mapToObj(i -> SimpleData.of(schemas.get(i), values.get(i)))
                 .collect(Collectors.toList());
     }
 
