@@ -41,4 +41,7 @@ publishing {
             from components.java
         }
     }
+    repositories {
+        maven { url 'https://jitpack.io' }
+    }
 }
