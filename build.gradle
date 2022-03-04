@@ -3,9 +3,8 @@ plugins {
     id 'io.spring.dependency-management' version '1.0.11.RELEASE'
     id 'java'
     id 'maven-publish'
+    id 'maven'
 }
-
-apply plugin: 'maven-publish'
 
 group = 'com.kian.yun'
 version = '0.0.1-SNAPSHOT'
