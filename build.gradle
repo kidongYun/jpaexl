@@ -37,10 +37,6 @@ tasks.named('test') {
 publishing {
     publications {
         mavenJava(MavenPublication) {
-            groupId = 'com.github.kidongYun'
-            artifactId = 'jpaexl'
-            version = '0.0.1-SNAPSHOT'
-
             from components.java
         }
     }
